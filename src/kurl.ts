@@ -3,7 +3,7 @@
 import * as yargs from "yargs";
 
 yargs
-  .commandDir("../build/commands")
+  .commandDir("../commands")
   .env()
   .help()
   .demandCommand()

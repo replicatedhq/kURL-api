@@ -11,6 +11,8 @@ import { Templates } from "../util/services/templates";
 import { MetricsStore } from "../util/services/metrics";
 import { logger } from "../logger";
 import * as requestIP from "request-ip";
+import { getInstallerVersions } from "../installers/installer-versions";
+import { getDistUrl, kurlVersionOrDefault } from "../util/package";
 
 interface ErrorResponse {
   error: any;
@@ -24,12 +26,15 @@ const notFoundResponse = {
 
 @Controller("/")
 export class Installers {
+  private distURL: string;
 
   constructor (
     private readonly installerStore: InstallerStore,
     private readonly templates: Templates,
     private readonly metricsStore: MetricsStore,
-  ) {}
+  ) {
+    this.distURL = getDistUrl();
+  }
 
   /**
    * /<installerID>/join.sh handler
@@ -43,24 +48,25 @@ export class Installers {
   public async getJoin(
     @Res() response: Express.Response,
     @PathParams("installerID") installerID: string,
-    @PathParams("kurlVersion") kurlVersion: string|undefined,
+    @PathParams("kurlVersion") kvarg: string|undefined,
   ): Promise<string | ErrorResponse> {
 
-    let installer = await this.installerStore.getInstaller(installerID);
+    let kurlVersion = kurlVersionOrDefault(kvarg);
+    let installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    let installer = await this.installerStore.getInstaller(installerID, installerVersions);
     if (!installer) {
       response.status(404);
       return notFoundResponse;
     }
 
-    if (!kurlVersion && installer.spec.kurl) {
-      kurlVersion = installer.spec.kurl.installerVersion
-    }
-
-    installer = await installer.resolve();
+    installer = await installer.resolve(installerVersions);
+    kurlVersion = kurlVersionOrDefault(kvarg, installer);
+    installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
-    return this.templates.renderJoinScript(installer, kurlVersion);
+    return this.templates.renderJoinScript(installer, installerVersions, kurlVersion);
   }
 
   /**
@@ -75,24 +81,27 @@ export class Installers {
   public async getUpgrade(
     @Res() response: Express.Response,
     @PathParams("installerID") installerID: string,
-    @PathParams("kurlVersion") kurlVersion: string|undefined,
+    @PathParams("kurlVersion") kvarg: string|undefined,
   ): Promise<string | ErrorResponse> {
 
-    let installer = await this.installerStore.getInstaller(installerID);
+    let kurlVersion = kurlVersionOrDefault(kvarg);
+    let installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    let installer = await this.installerStore.getInstaller(installerID, installerVersions);
     if (!installer) {
       response.status(404);
       return notFoundResponse;
     }
 
-    if (!kurlVersion && installer.spec.kurl) {
-      kurlVersion = installer.spec.kurl.installerVersion
-    }
+    installer = await installer.resolve(installerVersions);
+    kurlVersion = kurlVersionOrDefault(kvarg, installer);
+    installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
-    installer = await installer.resolve();
+    installer = await installer.resolve(installerVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
-    return this.templates.renderUpgradeScript(installer, kurlVersion);
+    return this.templates.renderUpgradeScript(installer, installerVersions, kurlVersion);
   }
 
   @Get("/version/:kurlVersion/:installerID/tasks.sh")
@@ -101,38 +110,42 @@ export class Installers {
   public async getTasks(
     @Res() response: Express.Response,
     @PathParams("installerID") installerID: string,
-    @PathParams("kurlVersion") kurlVersion: string|undefined,
+    @PathParams("kurlVersion") kvarg: string|undefined,
   ): Promise<string | ErrorResponse> {
 
-    let installer = await this.installerStore.getInstaller(installerID);
+    let kurlVersion = kurlVersionOrDefault(kvarg);
+    let installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    let installer = await this.installerStore.getInstaller(installerID, installerVersions);
     if (!installer) {
       response.status(404);
       return notFoundResponse;
     }
 
-    if (!kurlVersion && installer.spec.kurl) {
-      kurlVersion = installer.spec.kurl.installerVersion
-    }
-
-    installer = await installer.resolve();
+    installer = await installer.resolve(installerVersions);
+    kurlVersion = kurlVersionOrDefault(kvarg, installer);
+    installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
-    return this.templates.renderTasksScript(installer, kurlVersion);
+    return this.templates.renderTasksScript(installer, installerVersions, kurlVersion);
   }
 
   @Get("/")
   @Get("/version/:kurlVersion")
   public async root(
     @Res() response: Express.Response,
-    @PathParams("kurlVersion") kurlVersion: string|undefined,
-  ): Promise<string> {
+    @PathParams("kurlVersion") kvarg: string|undefined,
+  ): Promise<string | ErrorResponse> {
 
-    const installer = await (await Installer.latest(kurlVersion)).resolve();
+    const kurlVersion = kurlVersionOrDefault(kvarg);
+    const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    const installer = await (Installer.latest(installerVersions)).resolve(installerVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
-    return this.templates.renderInstallScript(installer, installer.spec.kurl?.installerVersion);
+    return this.templates.renderInstallScript(installer, installerVersions, kurlVersion);
   }
 
   /**
@@ -151,20 +164,21 @@ export class Installers {
     @Res() response: Express.Response,
     @Req() request: Express.Request,
     @PathParams("installerID") installerID: string,
-    @PathParams("kurlVersion") kurlVersion: string|undefined,
+    @PathParams("kurlVersion") kvarg: string|undefined,
   ): Promise<string | ErrorResponse> {
 
-    let installer = await this.installerStore.getInstaller(installerID);
+    let kurlVersion = kurlVersionOrDefault(kvarg);
+    let installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    let installer = await this.installerStore.getInstaller(installerID, installerVersions);
     if (!installer) {
       response.status(404);
       return notFoundResponse;
     }
 
-    if (!kurlVersion && installer.spec.kurl) {
-      kurlVersion = installer.spec.kurl.installerVersion
-    }
-
-    installer = await installer.resolve();
+    installer = await installer.resolve(installerVersions);
+    kurlVersion = kurlVersionOrDefault(kvarg, installer);
+    installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     try {
       await this.metricsStore.saveSaasScriptEvent({
@@ -180,6 +194,6 @@ export class Installers {
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
-    return this.templates.renderInstallScript(installer, kurlVersion);
+    return this.templates.renderInstallScript(installer, installerVersions, kurlVersion);
   }
 }

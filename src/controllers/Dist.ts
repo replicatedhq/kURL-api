@@ -25,7 +25,7 @@ export class Dist {
     @Res() response: Express.Response,
     @PathParams("pkg") pkg: string,
   ): Promise<void> {
-    const location = getPackageUrl(this.distURL, "", pkg);
+    const location = await getPackageUrl(this.distURL, "", pkg);
 
     response.redirect(307, location);
   }

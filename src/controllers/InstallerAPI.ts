@@ -13,7 +13,7 @@ import { instrumented } from "monkit";
 import { Installer, InstallerObject, InstallerStore } from "../installers";
 import decode from "../util/jwt";
 import { getInstallerVersions } from "../installers/installer-versions";
-import { getDistUrl } from "../util/package";
+import { getDistUrl, kurlVersionOrDefault } from "../util/package";
 
 interface ErrorResponse {
   error: any;
@@ -51,13 +51,14 @@ const unauthenticatedResponse = {
 
 @Controller("/installer")
 export class Installers {
-
   private kurlURL: string;
+  private distURL: string;
 
   constructor (
     private readonly installerStore: InstallerStore,
   ) {
     this.kurlURL = process.env["KURL_URL"] || "https://kurl.sh";
+    this.distURL = getDistUrl();
   }
 
   /**
@@ -83,14 +84,18 @@ export class Installers {
       return invalidYAMLResponse;
     }
 
-    if (await i.isLatest()) {
+    const kurlVersion = kurlVersionOrDefault();
+
+    const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    if (i.isLatest(installerVersions)) {
       response.contentType("text/plain");
       response.status(201);
       return `${this.kurlURL}/latest`;
     }
     i.id = i.hash();
 
-    const err = await (await i.resolve()).validate();
+    const err = await (await i.resolve(installerVersions)).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -109,7 +114,9 @@ export class Installers {
   ): Promise<any> {
     response.type("application/json");
 
-    const installerVersions = await getInstallerVersions(getDistUrl(), undefined);
+    const kurlVersion = kurlVersionOrDefault();
+
+    const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     const resp = _.reduce(installerVersions, (accm, value, key) => {
       accm[key] = _.concat(["latest"], value);
@@ -174,13 +181,18 @@ export class Installers {
     @PathParams("id") id: string,
     @QueryParams("resolve") resolve: string,
   ): Promise<string | InstallerObject | ErrorResponse> {
-    let installer = await this.installerStore.getInstaller(id);
+
+    const kurlVersion = kurlVersionOrDefault();
+
+    const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    let installer = await this.installerStore.getInstaller(id, installerVersions);
     if (!installer) {
       response.status(404);
       return notFoundResponse;
     }
     if (resolve) {
-      installer = await installer.resolve();
+      installer = await installer.resolve(installerVersions);
     }
     if (installer.id === "latest") {
       installer.id = "";
@@ -210,6 +222,7 @@ export class Installers {
     @Res() response: Express.Response,
     @Req() request: Express.Request,
   ): Promise<string | ErrorResponse> {
+
     let i: Installer;
     try {
       i = Installer.parse(request.body);
@@ -218,7 +231,11 @@ export class Installers {
       return invalidYAMLResponse;
     }
 
-    const err = await (await i.resolve()).validate();
+    const kurlVersion = kurlVersionOrDefault();
+
+    const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+
+    const err = await (await i.resolve(installerVersions)).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -228,7 +245,7 @@ export class Installers {
     return "";
   }
 
-  async doMakeInstaller( response: Express.Response, request: Express.Request, id: string, slug: string, skipValidation: boolean): Promise<string | ErrorResponse> {
+  async doMakeInstaller(response: Express.Response, request: Express.Request, id: string, slug: string, skipValidation: boolean): Promise<string | ErrorResponse> {
     const auth = request.header("Authorization");
     if (!auth) {
       response.status(401);
@@ -273,7 +290,11 @@ export class Installers {
     }
 
     if (!skipValidation) {
-      const err = await (await i.resolve()).validate();
+      const kurlVersion = kurlVersionOrDefault();
+
+      const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+  
+      const err = await (await i.resolve(installerVersions)).validate(installerVersions);
       if (err) {
         response.status(400);
         return err;

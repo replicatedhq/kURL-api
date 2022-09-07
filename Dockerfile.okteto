@@ -1,33 +1,33 @@
 FROM golang:1.19 as builder
 
-ENV PROJECT_PATH=/go/src/github.com/replicatedhq/kurl
+ENV PROJECT_PATH=/go/src/github.com/replicatedhq/kurl-api
 WORKDIR $PROJECT_PATH
 
-## Get deps
-ADD go.mod go.sum $PROJECT_PATH
+COPY go.mod go.sum $PROJECT_PATH/
 RUN --mount=target=/root/.cache,type=cache go mod download
 
-## Now add the project and compile
-COPY . $PROJECT_PATH
-RUN --mount=target=/root/.cache,type=cache make web
+COPY Makefile $PROJECT_PATH/
+COPY cmd $PROJECT_PATH/cmd
+RUN --mount=target=/root/.cache,type=cache make build/bin/server
 
-FROM node:14-alpine3.16
+
+FROM node:14
 
 WORKDIR /src
 
 ENV npm_config_cache /cache/.npm
 
-RUN  apk add --no-cache make bash
-
-ADD web/Makefile .
-ADD web/package.json .
-ADD web/package-lock.json .
+COPY Makefile .
+COPY package.json .
+COPY package-lock.json .
 RUN --mount=type=cache,target=/cache/.npm npm_config_cache=/cache/.npm make deps
 
-ADD web .
-COPY --from=builder /go/src/github.com/replicatedhq/kurl/web/bin/server /bin
+ADD . .
 RUN --mount=type=cache,target=./node_modules/.cache/webpack make build
+RUN chmod +x build/bin/kurl
+
+COPY --from=builder /go/src/github.com/replicatedhq/kurl-api/build/bin/server /bin/server
 
 EXPOSE 3000
 
-ENTRYPOINT ["node", "--no-deprecation", "bin/kurl", "serve"]
+ENTRYPOINT ["node", "--no-deprecation", "build/bin/kurl", "serve"]

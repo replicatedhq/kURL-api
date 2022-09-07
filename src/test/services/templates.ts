@@ -2,7 +2,7 @@ import {describe, it} from "mocha";
 import {expect} from "chai";
 import { bashStringEscape, manifestFromInstaller } from "../../util/services/templates";
 import { Installer } from "../../installers";
-import * as installerVersions from "../../installers/installer-versions";
+import * as installerVersionsPkg from "../../installers/installer-versions";
 import * as sinon from "sinon";
 
 
@@ -29,7 +29,9 @@ daemonConfig: |
 });
 
 describe("When rendering installer yaml", () => {
+
   it("does not strip double quotes from integers", async () => {
+
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
 metadata:
@@ -51,18 +53,22 @@ spec:
 `;
     const installer = Installer.parse(yaml);
 
-    const manifest = await manifestFromInstaller(installer, "KURL_URL", "APP_URL", "DIST_URL", "UTIL_IMAGE", "BINUTILS_IMAGE", "");
+    const versions = {
+      "kubernetes": ["1.19.9"],
+    };
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, "DIST_URL", "");
     expect(manifest.INSTALLER_YAML).to.contain(`name: '0668700'`);
   });
 });
 
 describe("When rendering installer yaml with kurlVersion from url", () => {
 
-  const installerVersionsMock = sinon.mock(installerVersions);
-  const distUrl = "DIST_URL"
-  const kurlInstallerVersion = "v2022.03.23-0";
-
   it("injects the kurl version from the argument", async () => {
+
+    const installerVersionsMock = sinon.mock(installerVersionsPkg);
+    const distUrl = "DIST_URL"
+    const kurlInstallerVersion = "v2022.03.23-0";
+
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
 metadata:
@@ -82,14 +88,12 @@ spec:
   sonobuoy:
     version: 0.50.0
 `;
-
-    installerVersionsMock.expects("getInstallerVersions").once().withArgs(distUrl, kurlInstallerVersion).returns({
-      "kubernetes": ["1.19.9"],
-    });
-
     const installer = Installer.parse(yaml);
 
-    const manifest = await manifestFromInstaller(installer, "KURL_URL", "APP_URL", distUrl, "UTIL_IMAGE", "BINUTILS_IMAGE", kurlInstallerVersion);
+    const versions = {
+      "kubernetes": ["1.19.9"],
+    };
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, kurlInstallerVersion);
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlInstallerVersion}`);
 
     installerVersionsMock.verify();
@@ -99,11 +103,12 @@ spec:
 
 describe("When rendering installer yaml with kurlVersion in spec", () => {
 
-  const installerVersionsMock = sinon.mock(installerVersions);
-  const distUrl = "DIST_URL"
-  const kurlInstallerVersion = "v2022.03.23-0";
-
   it("includes the kurl version from the spec", async () => {
+
+    const installerVersionsMock = sinon.mock(installerVersionsPkg);
+    const distUrl = "DIST_URL"
+    const kurlInstallerVersion = "v2022.03.23-0";
+
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
 metadata:
@@ -125,14 +130,12 @@ spec:
   kurl:
     installerVersion: ${kurlInstallerVersion}
 `;
-
-    installerVersionsMock.expects("getInstallerVersions").once().withArgs(distUrl, kurlInstallerVersion).returns({
-      "kubernetes": ["1.19.9"],
-    });
-
     const installer = Installer.parse(yaml);
 
-    const manifest = await manifestFromInstaller(installer, "KURL_URL", "APP_URL", distUrl, "UTIL_IMAGE", "BINUTILS_IMAGE", "");
+    const versions = {
+      "kubernetes": ["1.19.9"],
+    };
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, "");
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlInstallerVersion}`);
 
     installerVersionsMock.verify();
@@ -142,12 +145,13 @@ spec:
 
 describe("When rendering installer yaml with kurlVersion in spec and url", () => {
 
-  const installerVersionsMock = sinon.mock(installerVersions);
-  const distUrl = "DIST_URL"
-  const kurlUrlInstallerVersion = "v2022.03.23-0";
-  const specKurlInstallerVersion = "v2022.03.11-0";
-
   it("kurlVersion from the url overwrites version in spec", async () => {
+
+    const installerVersionsMock = sinon.mock(installerVersionsPkg);
+    const distUrl = "DIST_URL"
+    const kurlUrlInstallerVersion = "v2022.03.23-0";
+    const specKurlInstallerVersion = "v2022.03.11-0";
+
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
 metadata:
@@ -170,16 +174,53 @@ spec:
     installerVersion: ${specKurlInstallerVersion}
     airgap: false
 `;
-
-    installerVersionsMock.expects("getInstallerVersions").once().withArgs(distUrl, kurlUrlInstallerVersion).returns({
-      "kubernetes": ["1.19.9"],
-    });
-
     const installer = Installer.parse(yaml);
 
-    const manifest = await manifestFromInstaller(installer, "KURL_URL", "APP_URL", distUrl, "UTIL_IMAGE", "BINUTILS_IMAGE", kurlUrlInstallerVersion);
+    const versions = {
+      "kubernetes": ["1.19.9"],
+    };
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, kurlUrlInstallerVersion);
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlUrlInstallerVersion}`);
     expect(manifest.INSTALLER_YAML).to.contain(`airgap: false`);
+
+    installerVersionsMock.verify();
+    installerVersionsMock.restore();
+  });
+});
+
+describe("When rendering installer yaml with kurlVersion in neither spec nor url", () => {
+
+  it("includes the kurl version from the spec", async () => {
+  
+    const installerVersionsMock = sinon.mock(installerVersionsPkg);
+    const distUrl = "DIST_URL"
+
+    const yaml = `apiVersion: cluster.kurl.sh/v1beta1
+kind: Installer
+metadata:
+  name: "0668700"
+spec:
+  kubernetes:
+    version: 1.19.9
+  docker:
+    version: 20.10.5
+  weave:
+    version: 2.6.5
+  rook:
+    isBlockStorageEnabled: true
+    version: 1.4.3
+  prometheus:
+    version: 0.46.0
+  sonobuoy:
+    version: 0.50.0
+`;
+    const installer = Installer.parse(yaml);
+
+    const versions = {
+      "kubernetes": ["1.19.9"],
+    };
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, "v0.0.0-0");
+    expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: v0.0.0-0`);
 
     installerVersionsMock.verify();
     installerVersionsMock.restore();
