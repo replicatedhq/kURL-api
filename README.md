@@ -2,6 +2,8 @@
 
 This directory holds a web server with an API for creating and serving custom kURL installers.
 
+This is a hosted service that is not deployed to the end customer environment.
+
 ## Running Locally
 
 *NOTE: This project currently depends on an external MySQL database*
