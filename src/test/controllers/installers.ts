@@ -1,8 +1,8 @@
 import {describe, it} from "mocha";
 import {expect} from "chai";
 import { Installer } from "../../installers";
-import { InstallerVersions } from "../../installers/versions";
 import * as _ from "lodash";
+import { installerVersions } from "../fixtures/installer-versions";
 
 const everyOption = `apiVersion: kurl.sh/v1beta1
 metadata:
@@ -686,7 +686,7 @@ spec:
         [
           typeMetaStableV1Beta1,
         ].forEach(async (yaml) => {
-          const out = await Installer.parse(yaml).validate();
+          const out = await Installer.parse(yaml).validate(installerVersions);
 
           expect(out).to.equal(undefined);
         });
@@ -694,7 +694,7 @@ spec:
 
       describe("application slug exists", () => {
         it("=> void", async () => {
-          const out = await Installer.parse(kots).validate();
+          const out = await Installer.parse(kots).validate(installerVersions);
 
           expect(out).to.equal(undefined);
         });
@@ -702,7 +702,7 @@ spec:
 
       describe("every option", () => {
         it("=> void", async () => {
-          const out = await Installer.parse(everyOption).validate();
+          const out = await Installer.parse(everyOption).validate(installerVersions);
 
           expect(out).to.equal(undefined);
         });
@@ -710,7 +710,7 @@ spec:
 
       describe("unknown versions w/ overrides", () => {
         it("=> void", async () => {
-          const out = await Installer.parse(overrideUnknownVersion).validate();
+          const out = await Installer.parse(overrideUnknownVersion).validate(installerVersions);
           expect(out).to.equal(undefined);
         });
       });
@@ -723,7 +723,7 @@ spec:
   kubernetes:
     version: ""
 `;
-        const noK8sOut = await Installer.parse(noK8s).validate();
+        const noK8sOut = await Installer.parse(noK8s).validate(installerVersions);
         expect(noK8sOut).to.deep.equal({ error: { message: "Kubernetes version is required" } });
 
         const badK8s = `
@@ -731,7 +731,7 @@ spec:
   kubernetes:
     version: "0.15.3"
 `;
-        const badK8sOut = await Installer.parse(badK8s).validate();
+        const badK8sOut = await Installer.parse(badK8s).validate(installerVersions);
         expect(badK8sOut).to.deep.equal({ error: { message: `Kubernetes version "0.15.3" is not supported` } });
       });
     });
@@ -745,7 +745,7 @@ spec:
   prometheus:
     version: 0.32.0
 `;
-        const out = await Installer.parse(yaml).validate();
+        const out = await Installer.parse(yaml).validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: `Prometheus version "0.32.0" is not supported` } });
       });
@@ -753,7 +753,7 @@ spec:
 
     describe("kots version missing", () => {
       it("=> ErrorResponse", async () => {
-        const out = await Installer.parse(kotsNoVersion).validate();
+        const out = await Installer.parse(kotsNoVersion).validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "spec/kotsadm must have required property 'version'" }});
       });
@@ -767,7 +767,7 @@ spec:
   docker:
     version: true`;
       const i = Installer.parse(yaml);
-      const out = await i.validate();
+      const out = await i.validate(installerVersions);
 
       expect(out).to.deep.equal({ error: { message: "spec.docker.version should be string" } });
     });
@@ -781,7 +781,7 @@ spec:
     version: latest
     podCidrRange: abc`;
       const i = Installer.parse(yaml);
-      const out = await i.validate();
+      const out = await i.validate(installerVersions);
 
       expect(out).to.deep.equal({ error: { message: "Weave podCidrRange \"abc\" is invalid" } });
     });
@@ -793,7 +793,7 @@ spec:
     version: latest
     serviceCidrRange: abc`;
       const i = Installer.parse(yaml);
-      const out = await i.validate();
+      const out = await i.validate(installerVersions);
 
       expect(out).to.deep.equal({ error: { message: "Kubernetes serviceCidrRange \"abc\" is invalid" } });
     });
@@ -806,7 +806,7 @@ spec:
     version: latest
     seLinux: true`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "spec/kubernetes must NOT have additional properties" } });
       });
@@ -822,7 +822,7 @@ spec:
     version: 0.53.1-30.1.0
     serviceType: thisisatest`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Supported Prometheus service types are \"NodePort\" and \"ClusterIP\", not \"thisisatest\"" } });
       });
@@ -838,7 +838,7 @@ spec:
     version: 0.47.0-15.3.1
     serviceType: ClusterIP`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Prometheus service types are supported for version \"0.48.1-16.10.0\" and later, not \"0.47.0-15.3.1\"" } });
       });
@@ -854,7 +854,7 @@ spec:
     version: 0.48.1-16.10.0
     serviceType: ClusterIP`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -869,7 +869,7 @@ spec:
   prometheus:
     version: 0.47.0-15.3.1`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Prometheus versions less than or equal to 0.49.0-17.1.3 are not compatible with Kubernetes 1.22+" } });
       });
@@ -889,7 +889,7 @@ spec:
   contour: 
     version: 1.20.0`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "The following add-ons are not compatible with k3s: contour, containerd" } });
       });
@@ -904,7 +904,7 @@ spec:
     kotsadm:
       version: 1.63.0`;
           const i = Installer.parse(yaml);
-          const out = await i.validate();
+          const out = await i.validate(installerVersions);
   
           expect(out).to.deep.equal({ error: { message: "Nodeports for this distro must use a NodePort between 30000-32767" } });
         });
@@ -916,14 +916,14 @@ spec:
 spec:
   k3s:
     version: v1.23.3+k3s1
-  registry: 
+  registry:
     version: 2.7.1
-  kotsadm: 
+  kotsadm:
     version: 1.63.0
     uiBindPort: 30880
     disableS3: true`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -935,14 +935,14 @@ spec:
 spec:
   k3s:
     version: v1.23.3+k3s1
-  registry: 
+  registry:
     version: 2.7.1
-  kotsadm: 
+  kotsadm:
     version: 1.63.0
     uiBindPort: 30880
     disableS3: true`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -959,10 +959,10 @@ spec:
     uiBindPort: 30880
   containerd:
     version: 1.4.6
-  contour: 
+  contour:
     version: 1.20.0`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "The following add-ons are not compatible with rke2: contour, containerd" } });
       });
@@ -978,7 +978,7 @@ spec:
       version: 1.63.0
       uiBindPort: 8800`;
           const i = Installer.parse(yaml);
-          const out = await i.validate();
+          const out = await i.validate(installerVersions);
   
           expect(out).to.deep.equal({ error: { message: "Nodeports for this distro must use a NodePort between 30000-32767" } });
         });
@@ -990,9 +990,9 @@ spec:
 spec:
   rke2:
     version: v1.22.6+rke2r1
-  registry: 
+  registry:
     version: 2.7.1
-  kotsadm: 
+  kotsadm:
     version: 1.63.0
     uiBindPort: 30880
     disableS3: true
@@ -1004,7 +1004,7 @@ spec:
     localPVStorageClassName: default
     isCstorEnabled: false`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -1022,7 +1022,7 @@ spec:
     localPVStorageClassName: default
     isCstorEnabled: false`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -1040,7 +1040,7 @@ spec:
     localPVStorageClassName: default
     isCstorEnabled: false`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Openebs version \"1.12.0\" is not compatible with Kubernetes versions 1.22+" } });
       });
@@ -1058,7 +1058,7 @@ spec:
     localPVStorageClassName: default
     isCstorEnabled: false`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal(undefined);
       });
@@ -1075,7 +1075,7 @@ spec:
     isCstorEnabled: true
     cstorStorageClassName: "abcd"`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Openebs version \"2.12.9\" does not support cstor in kURL" } });
       });
@@ -1090,7 +1090,7 @@ spec:
   docker:
     version: 20.10.5`;
         const i = Installer.parse(yaml);
-        const out = await i.validate();
+        const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Docker is not supported with Kubernetes versions 1.24+, please choose Containerd" } });
       });
@@ -1195,10 +1195,10 @@ spec:
 
   describe("antrea", () => {
     it("should parse", async () => {
-      const i = await Installer.parse(everyOption).resolve();
+      const i = await Installer.parse(everyOption).resolve(installerVersions);
 
       expect(i.spec.antrea).to.deep.equal({
-        version: InstallerVersions.antrea[0],
+        version: "1.4.0",
         isEncryptionDisabled: true,
         podCIDR: "172.19.0.0/16",
         podCidrRange: "/16",
@@ -1260,7 +1260,7 @@ spec:
   describe("longhorn", () => {
     it("should parse", async () => {
       const i = Installer.parse(longhorn);
-      const pkgs = await i.packages(undefined);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasHostLonghorn = _.some(pkgs, (pkg) => {
         return pkg === "host-longhorn";
@@ -1278,52 +1278,122 @@ spec:
 
   describe("latestMinors", () => {
     it("should include latest version indexed by minor", () => {
-      const out = Installer.latestMinors(InstallerVersions["kubernetes"]);
+      const out = Installer.latestMinors([
+          "1.18.20",
+          "1.18.19",
+          "1.18.18",
+          "1.18.17",
+          "1.18.10",
+          "1.18.9",
+          "1.18.4",
+          "1.17.13",
+          "1.17.7",
+          "1.17.3",
+          "1.16.4",
+        ]);
 
       expect(out[0]).to.equal("0.0.0");
       expect(out[14]).to.equal("0.0.0");
       expect(out[15]).to.equal("0.0.0");
       expect(out[16]).to.equal("1.16.4");
       expect(out[17]).to.equal("1.17.13");
-      expect(out[18]).to.match(/1\.18\.\d+/);
-      expect(out[19]).to.match(/1\.19\.\d+/);
-      expect(out[20]).to.match(/1\.20\.\d+/);
-      expect(out[21]).to.match(/1\.21\.\d+/);
+      expect(out[18]).to.equal("1.18.20");
     });
   });
 
   describe("resolveLatestPatchVersion", () => {
-    it("should resolve kubernetes version 1.16.x", () => {
-      const out = Installer.resolveLatestPatchVersion("1.16.x", InstallerVersions["kubernetes"]);
-      expect(out).to.equal("1.16.4");
+    it("should resolve kubernetes version 1.17.x", () => {
+      const out = Installer.resolveLatestPatchVersion("1.17.x", [
+        "1.18.20",
+        "1.18.19",
+        "1.18.18",
+        "1.18.17",
+        "1.18.10",
+        "1.18.9",
+        "1.18.4",
+        "1.17.13",
+        "1.17.7",
+        "1.17.3",
+        "1.16.4",
+      ]);
+      expect(out).to.equal("1.17.13");
     });
 
     it("should resolve weird docker versions", () => {
-      const out = Installer.resolveLatestPatchVersion("19.03.x", InstallerVersions["docker"]);
+      const out = Installer.resolveLatestPatchVersion("19.03.x", [
+        "20.10.17",
+        "20.10.5",
+        "19.03.15",
+        "19.03.10",
+        "19.03.4",
+        "18.09.8",
+      ]);
       expect(out).to.equal("19.03.15");
     });
 
     it("should fail on non-semver minio version", () => {
       const bad = function (): string {
-        return Installer.resolveLatestPatchVersion("1.1.x", InstallerVersions["minio"]);
+        return Installer.resolveLatestPatchVersion("1.1.x", [
+          "2022-08-22T23-53-06Z",
+          "2022-08-02T23-59-16Z",
+          "2022-07-17T15-43-14Z",
+          "2022-07-06T20-29-49Z",
+          "2022-06-11T19-55-32Z",
+          "2020-01-25T02-50-51Z",
+        ]);
       };
       expect(bad).to.throw("latest patch version not found for 1.1.x");
     });
 
     it("should throw an error when the version doesnt exist", () => {
       const bad = function (): string {
-        return Installer.resolveLatestPatchVersion("1.123.x", InstallerVersions["kubernetes"]);
+        return Installer.resolveLatestPatchVersion("1.123.x", [
+          "1.18.20",
+          "1.18.19",
+          "1.18.18",
+          "1.18.17",
+          "1.18.10",
+          "1.18.9",
+          "1.18.4",
+          "1.17.13",
+          "1.17.7",
+          "1.17.3",
+          "1.16.4",
+        ]);
       };
       expect(bad).to.throw("latest patch version not found for 1.123.x");
     });
 
     it("should not fail on kotsadm alpha version", () => {
-      const out = Installer.resolveLatestPatchVersion("1.43.x", InstallerVersions["kotsadm"]);
+      const out = Installer.resolveLatestPatchVersion("1.43.x", [
+        "1.43.2",
+        "1.43.1",
+        "1.43.0",
+        "1.42.1",
+        "1.42.0",
+        "1.41.1",
+        "1.41.0",
+        "1.40.0",
+        "alpha",
+        "nightly",
+      ]);
       expect(out).to.equal("1.43.2");
     });
 
     it("should resolve latest weave patch version", () => {
-      const out = Installer.resolveLatestPatchVersion("2.8.x", Installer.replaceAddonVersions("weave", InstallerVersions["weave"]));
+      const out = Installer.resolveLatestPatchVersion("2.8.x", Installer.replaceAddonVersions("weave", [
+        "2.6.5-20220825",
+        "2.6.5-20220720",
+        "2.6.5-20220616",
+        "2.6.5",
+        "2.6.4",
+        "2.5.2",
+        "2.8.1-20220825",
+        "2.8.1-20220720",
+        "2.8.1-20220616",
+        "2.8.1",
+        "2.7.0",
+      ]));
       expect(out).to.match(/2.8.1-\d{8}/);
     });
   });
@@ -1362,7 +1432,7 @@ spec:
     additionalImages:
     - postgres`;
       const i = Installer.parse(yaml);
-      const out = await i.validate();
+      const out = await i.validate(installerVersions);
 
       expect(out).to.deep.equal({ error: { message: "spec/helm must have required property 'helmfileSpec'" } });
     });
@@ -1370,8 +1440,8 @@ spec:
 
   describe("packages", () => {
     it("should convert camel case to kebab case", async () => {
-      const i = await Installer.parse(everyOption).resolve();
-      const pkgs = await i.packages(undefined);
+      const i = await Installer.parse(everyOption).resolve(installerVersions);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasCertManager = _.some(pkgs, (pkg) => {
         return _.startsWith(pkg, "cert-manager");
@@ -1386,7 +1456,7 @@ spec:
 
     it("should include defaults", async () => {
       const i = Installer.parse(min);
-      const pkgs = await i.packages(undefined);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasCommon = _.some(pkgs, (pkg) => {
         return pkg === "common";
@@ -1411,7 +1481,7 @@ spec:
 
     it("should include a versioned kurl-bin-utils", async () => {
       const i = Installer.parse(min);
-      const pkgs = await i.packages("v2021.05.27-0");
+      const pkgs = await i.packages(installerVersions, "v2021.05.27-0");
 
       const hasKurlBinUtils = _.some(pkgs, (pkg) => {
         return pkg === "kurl-bin-utils-v2021.05.27-0";
@@ -1421,7 +1491,7 @@ spec:
 
     it("should include kubernetes conformance images", async () => {
       const i = Installer.parse(conformance);
-      const pkgs = await i.packages(undefined);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasSonobuoy = _.some(pkgs, (pkg) => {
         return pkg === "sonobuoy-0.50.0";
@@ -1441,7 +1511,7 @@ spec:
 
     it("should not include kubernetes conformance images for versions < 1.17", async () => {
       const i = Installer.parse(noConformance);
-      const pkgs = await i.packages(undefined);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasSonobuoy = _.some(pkgs, (pkg) => {
         return pkg === "sonobuoy-0.50.0";
@@ -1461,7 +1531,7 @@ spec:
 
     it("should not include removed Kubernetes versions", async () => {
       const i = Installer.parse(noConformance);
-      const pkgs = await i.packages(undefined);
+      const pkgs = await i.packages(installerVersions, "");
 
       const hasKubernetes16 = _.some(pkgs, (pkg) => {
         return pkg === "kubernetes-1.16.4";

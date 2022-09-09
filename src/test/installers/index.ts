@@ -1,27 +1,28 @@
 import {describe, it} from "mocha";
 import {expect} from "chai";
 import { Installer } from "../../installers";
+import { installerVersions } from "../fixtures/installer-versions";
 
 describe("Resolve version", () => {
 
   it("resolves correct version without .x", async () => {
-    const version = await Installer.resolveVersion("rook", "1.0.4");
+    const version = await Installer.resolveVersion(installerVersions, "rook", "1.0.4");
     expect(version).to.equal("1.0.4");
   });
 
   it("resolves correct version with .x", async () => {
-    const version = await Installer.resolveVersion("kubernetes", "1.17.x");
-    expect(version).to.equal("1.17.13");
+    const version = await Installer.resolveVersion(installerVersions, "kubernetes", "1.18.x");
+    expect(version).to.equal("1.18.20");
   });
 
   it("resolves correct rook 1.0 version with .x", async () => {
-    const version = await Installer.resolveVersion("rook", "1.0.x");
-    expect(version).to.match(/^1\.0\.4-14\.2\.[\d]+/);
+    const version = await Installer.resolveVersion(installerVersions, "rook", "1.0.x");
+    expect(version).to.equal("1.0.4-14.2.21");
   });
 
   it("resolves latest", async () => {
-    const version = await Installer.resolveVersion("rook", "latest");
-    expect(version).to.match(/^1\.[\d]+\.[\d]+/);
+    const version = await Installer.resolveVersion(installerVersions, "rook", "latest");
+    expect(version).to.equal("1.0.4");
   });
 
 });

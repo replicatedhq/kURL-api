@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import * as _ from "lodash";
 import { Service } from "@tsed/common";
 import { Installer } from "../../installers";
-import { getInstallerVersions } from "../../installers/installer-versions";
+import { IInstallerVersions } from "../../installers/installer-versions";
 import { HTTPError } from "../../server/errors";
 import { getDistUrl, getPackageUrl, kurlVersionOrDefault } from "../package";
 
@@ -12,12 +12,6 @@ export class Templates {
   private kurlURL: string;
   private distURL: string;
   private replicatedAppURL: string;
-  private kurlUtilImage: string;
-  private kurlBinUtils: string;
-  private installTmplResolved: (data?: Manifest) => string;
-  private joinTmplResolved: (data?: Manifest) => string;
-  private upgradeTmplResolved: (data?: Manifest) => string;
-  private tasksTmplResolved: (data?: Manifest) => string;
   private templateOpts = {
     // HACK: do not hijack these from user facing go text template
     escape: /{{--unsupported--([\s\S]+?)}}/g, // do not use this
@@ -28,79 +22,29 @@ export class Templates {
   constructor() {
     this.kurlURL = process.env["KURL_URL"] || "https://kurl.sh";
     this.replicatedAppURL = process.env["REPLICATED_APP_URL"] || "https://replicated.app";
-    this.kurlUtilImage = process.env["KURL_UTIL_IMAGE"] || "replicated/kurl-util:alpha";
-    this.kurlBinUtils = process.env["KURL_BIN_UTILS_FILE"] || "kurl-bin-utils-latest.tar.gz";
 
     this.distURL = getDistUrl();
   }
 
-  private async installTmpl(): Promise<((data?: Manifest) => string)> {
-    if (this.installTmplResolved) {
-      return this.installTmplResolved;
-    }
-    this.installTmplResolved = await this.tmplFromUpstream("", "install.tmpl");
-    return this.installTmplResolved;
+  public async renderInstallScript(i: Installer, installerVersions: IInstallerVersions, kurlVersion: string): Promise<string> {
+    return await this.renderScriptFromUpstream(i, installerVersions, kurlVersion, "install.tmpl");
   }
 
-  private async joinTmpl(): Promise<((data?: Manifest) => string)> {
-    if (this.joinTmplResolved) {
-      return this.joinTmplResolved;
-    }
-    this.joinTmplResolved = await this.tmplFromUpstream("", "join.tmpl");
-    return this.joinTmplResolved;
+  public async renderJoinScript(i: Installer, installerVersions: IInstallerVersions, kurlVersion: string): Promise<string> {
+    return await this.renderScriptFromUpstream(i, installerVersions, kurlVersion, "join.tmpl");
   }
 
-  private async upgradeTmpl(): Promise<((data?: Manifest) => string)> {
-    if (this.upgradeTmplResolved) {
-      return this.upgradeTmplResolved;
-    }
-    this.upgradeTmplResolved = await this.tmplFromUpstream("", "upgrade.tmpl");
-    return this.upgradeTmplResolved;
+  public async renderUpgradeScript(i: Installer, installerVersions: IInstallerVersions, kurlVersion: string): Promise<string> {
+    return await this.renderScriptFromUpstream(i, installerVersions, kurlVersion, "upgrade.tmpl");
   }
 
-  private async tasksTmpl(): Promise<((data?: Manifest) => string)> {
-    if (this.tasksTmplResolved) {
-      return this.tasksTmplResolved;
-    }
-    this.tasksTmplResolved = await this.tmplFromUpstream("", "tasks.tmpl");
-    return this.tasksTmplResolved;
+  public async renderTasksScript(i: Installer, installerVersions: IInstallerVersions, kurlVersion: string): Promise<string> {
+    return await this.renderScriptFromUpstream(i, installerVersions, kurlVersion, "tasks.tmpl");
   }
 
-  public async renderInstallScript(i: Installer, kurlVersion: string|undefined): Promise<string> {
-    if (!kurlVersion) {
-      return await this.renderScriptFromTemplate(i, "", await this.installTmpl());
-    }
-    return await this.renderScriptFromUpstream(i, kurlVersion, "install.tmpl");
-  }
-
-  public async renderJoinScript(i: Installer, kurlVersion: string|undefined): Promise<string> {
-    if (!kurlVersion) {
-      return await this.renderScriptFromTemplate(i, "", await this.joinTmpl());
-    }
-    return await this.renderScriptFromUpstream(i, kurlVersion, "join.tmpl");
-  }
-
-  public async renderUpgradeScript(i: Installer, kurlVersion: string|undefined): Promise<string> {
-    if (!kurlVersion) {
-      return await this.renderScriptFromTemplate(i, "", await this.upgradeTmpl());
-    }
-    return await this.renderScriptFromUpstream(i, kurlVersion, "upgrade.tmpl");
-  }
-
-  public async renderTasksScript(i: Installer, kurlVersion: string|undefined): Promise<string> {
-    if (!kurlVersion) {
-      return await this.renderScriptFromTemplate(i, "", await this.tasksTmpl());
-    }
-    return await this.renderScriptFromUpstream(i, kurlVersion, "tasks.tmpl");
-  }
-
-  public async renderScriptFromTemplate(i: Installer, kurlVersion: string, tmpl: (data?: Manifest) => string): Promise<string> {
-    return tmpl(await manifestFromInstaller(i, this.kurlURL, this.replicatedAppURL, this.distURL, this.kurlUtilImage, this.kurlBinUtils, kurlVersion));
-  }
-
-  public async renderScriptFromUpstream(i: Installer, kurlVersion: string, script: string): Promise<string> {
+  public async renderScriptFromUpstream(i: Installer, installerVersions: IInstallerVersions, kurlVersion: string, script: string): Promise<string> {
     const tmpl = await this.tmplFromUpstream(kurlVersion, script);
-    return tmpl(await manifestFromInstaller(i, this.kurlURL, this.replicatedAppURL, this.distURL, this.kurlUtilImage, this.kurlBinUtils, kurlVersion));
+    return tmpl(manifestFromInstaller(i, this.kurlURL, this.replicatedAppURL, installerVersions, this.distURL, kurlVersion));
   }
 
   public async tmplFromUpstream(kurlVersion: string, script: string): Promise<((data?: Manifest) => string)> {
@@ -135,18 +79,14 @@ export function bashStringEscape( unescaped : string): string {
   return unescaped.replace(/[!"\\]/g, "\\$&");
 }
 
-export async function manifestFromInstaller(i: Installer, kurlUrl: string, replicatedAppURL: string, distUrl: string, kurlUtilImage: string, kurlBinUtils: string, kurlVersion: string): Promise<Manifest> {
-  kurlVersion = kurlVersionOrDefault(kurlVersion, i);
+export function manifestFromInstaller(i: Installer, kurlUrl: string, replicatedAppURL: string, installerVersions: IInstallerVersions, distUrl: string, kurlVersion: string): Manifest {
+  let kurlUtilImage = "replicated/kurl-util:alpha";
+  let kurlBinUtils = "kurl-bin-utils-latest.tar.gz";
   if (kurlVersion) {
     kurlUtilImage = `replicated/kurl-util:${kurlVersion}`;
     kurlBinUtils = `kurl-bin-utils-${kurlVersion}.tar.gz`;
-    if (i.spec.kurl) {
-      i.spec.kurl.installerVersion = kurlVersion;
-    } else {
-      i.spec.kurl = {additionalNoProxyAddresses: [], installerVersion: kurlVersion}
-    }
+    i.setKurlVersion(kurlVersion);
   }
-  const installerVersions = await getInstallerVersions(distUrl, kurlVersion);
   return {
     KURL_URL: kurlUrl,
     DIST_URL: distUrl,

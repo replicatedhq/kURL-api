@@ -1,6 +1,7 @@
 import {describe, it} from "mocha";
 import {expect} from "chai";
 import { Installer } from "../../installers";
+import { installerVersions } from "../fixtures/installer-versions";
 
 describe("Installer (RKE2)", () => {
 
@@ -11,7 +12,7 @@ spec:
   rke2:
     version: "0.15.3"
 `;
-      const badK8sOut = await Installer.parse(badRKE2).validate();
+      const badK8sOut = await Installer.parse(badRKE2).validate(installerVersions);
       expect(badK8sOut).to.deep.equal({ error: { message: "RKE2 version 0.15.3 is not supported" } });
     });
   });
@@ -23,7 +24,7 @@ spec:
   rke2:
     version: "v1.19.7+rke2r1"
 `;
-      const out = await Installer.parse(goodRKE2).validate();
+      const out = await Installer.parse(goodRKE2).validate(installerVersions);
 
       expect(out).to.equal(undefined);
     });
@@ -38,7 +39,7 @@ spec:
   rke2:
     version: "v1.19.7+rke2r1"
 `;
-      const badK8sOut = await Installer.parse(bad).validate();
+      const badK8sOut = await Installer.parse(bad).validate(installerVersions);
       expect(badK8sOut).to.deep.equal({ error: { message: "This spec contains both kubeadm and rke2, please specifiy only one Kubernetes distribution" } });
     });
   });

@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 PROJECT_NAME ?= kurl
+BUILDFLAGS = -tags "containers_image_openpgp containers_image_ostree_stub exclude_graphdriver_btrfs exclude_graphdriver_devicemapper"
 
 .PHONY: deps
 deps:
@@ -14,43 +15,36 @@ test: deps
 	npm run test
 	# missing api-tests, pact tests
 
-.PHONY: prebuild
-prebuild:
-	rm -rf build
-	mkdir -p build
-
 .PHONY: lint
 lint:
 	npx eslint . --ext .js,.jsx,.ts,.tsx
 
 .PHONY: build
-build: prebuild
+build:
 	`npm bin`/tsc --project .
-	mkdir -p bin
-	cp newrelic.js bin/newrelic.js
-	cp build/kurl.js bin/kurl
-	chmod +x bin/kurl
+	mkdir -p build/bin
+	cp newrelic.js build/bin/newrelic.js
+	cp build/kurl.js build/bin/kurl
+	chmod +x build/bin/kurl
 
 .PHONY: run
 run:
-	bin/kurl serve
+	build/bin/kurl serve
+
+go-test: cmd/server/main.go go.mod go.sum
+	go test ${BUILDFLAGS} ./cmd/...
+
+build/bin/server: cmd/server/main.go go.mod go.sum
+	mkdir -p build/bin
+	go build -o build/bin/server $(BUILDFLAGS) cmd/server/main.go
 
 .PHONY: run-debug
 run-debug:
-	node --inspect=0.0.0.0:9229 bin/kurl serve
+	node --inspect=0.0.0.0:9229 build/bin/kurl serve
 
 .PHONY: archive-modules
 archive-modules:
 	tar cfz node_modules.tar.gz node_modules/
-
-.PHONY: build-cache
-build-cache:
-	@-docker pull repldev/${PROJECT_NAME}:latest > /dev/null 2>&1 ||:
-	docker build -f Dockerfile.skaffoldcache -t repldev/${PROJECT_NAME}:latest .
-
-.PHONY: publish-cache
-publish-cache:
-	docker push repldev/${PROJECT_NAME}:latest
 
 .PHONY: build-staging
 build-staging: REGISTRY = 923411875752.dkr.ecr.us-east-1.amazonaws.com
@@ -61,9 +55,6 @@ build-production: REGISTRY = 799720048698.dkr.ecr.us-east-1.amazonaws.com
 build-production: build_and_push
 
 build_and_push:
-	docker build -f deploy/Dockerfile-slim -t ${PROJECT_NAME}:$${CIRCLE_SHA1:0:7} .
+	docker build -f deploy/Dockerfile -t ${PROJECT_NAME}:$${CIRCLE_SHA1:0:7} .
 	docker tag ${PROJECT_NAME}:$${CIRCLE_SHA1:0:7} $(REGISTRY)/${PROJECT_NAME}:$${CIRCLE_SHA1:0:7}
 	docker push $(REGISTRY)/${PROJECT_NAME}:$${CIRCLE_SHA1:0:7}
-
-generate-versions:
-	`npm bin`/ts-node generate-versions.ts

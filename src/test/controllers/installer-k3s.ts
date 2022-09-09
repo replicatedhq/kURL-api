@@ -1,6 +1,7 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import { Installer } from "../../installers";
+import { installerVersions } from "../fixtures/installer-versions";
 
 describe("Installer (K3S)", () => {
 
@@ -11,7 +12,7 @@ spec:
   k3s:
     version: "0.15.3"
 `;
-        const badK8sOut = await Installer.parse(badK3S).validate();
+        const badK8sOut = await Installer.parse(badK3S).validate(installerVersions);
         expect(badK8sOut).to.deep.equal({ error: { message: "K3S version 0.15.3 is not supported" } });
       });
     });
@@ -23,7 +24,7 @@ spec:
   k3s:
     version: "v1.19.7+k3s1"
 `;
-        const out = await Installer.parse(goodK3S).validate();
+        const out = await Installer.parse(goodK3S).validate(installerVersions);
 
         expect(out).to.equal(undefined);
       });
@@ -38,7 +39,7 @@ spec:
   k3s:
     version: "v1.19.7+k3s1"
 `;
-        const badK8sOut = await Installer.parse(bad).validate();
+        const badK8sOut = await Installer.parse(bad).validate(installerVersions);
         expect(badK8sOut).to.deep.equal({ error: { message: "This spec contains both kubeadm and k3s, please specifiy only one Kubernetes distribution" } });
       });
     });

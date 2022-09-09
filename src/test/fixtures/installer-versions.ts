@@ -1,6 +1,6 @@
+import { IInstallerVersions } from "../../installers/installer-versions";
 
-// first version of each is "latest"
-module.exports.InstallerVersions = {
+export const installerVersions: IInstallerVersions = {
   kubernetes: [
     "1.19.16",
     "1.19.15",
@@ -130,6 +130,7 @@ module.exports.InstallerVersions = {
   ],
   prometheus: [
     // cron-prometheus-update
+    "0.58.0-39.11.0",
     "0.58.0-39.9.0",
     "0.58.0-39.4.0",
     "0.57.0-36.2.0",
@@ -156,6 +157,7 @@ module.exports.InstallerVersions = {
   ],
   kotsadm: [
     // auto-kotsadm-update
+    "1.83.0",
     "1.82.0",
     "1.81.1",
     "1.81.0",
@@ -360,6 +362,7 @@ module.exports.InstallerVersions = {
   ],
   minio: [
     // cron-minio-update
+    "2022-09-01T23-53-36Z",
     "2022-08-22T23-53-06Z",
     "2022-08-02T23-59-16Z",
     "2022-07-17T15-43-14Z",
