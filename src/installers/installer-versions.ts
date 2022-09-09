@@ -51,6 +51,11 @@ async function getInternalAddonVersions(distUrl: string, kurlVersion: string) {
   const installerVersions = body.supportedVersions;
   Object.keys(installerVersions).map((addon: string) => {
     installerVersions[addon] = installerVersions[addon].filter((version: string) => version !== "latest");
+    // converts kebab case add-ons to camel case
+    // e.g. cert-manager => certManager
+    if (addon.includes("-")) {
+      installerVersions[_.camelCase(addon)] = installerVersions[addon];
+    }
   });
   installerVersionsCache[url] = installerVersions;
   return installerVersionsCache[url];
