@@ -177,6 +177,8 @@ spec:
     shouldEnablePurgeNodes: false
     rookShouldUseAllNodes: false
     rookShouldDisableReconcileMDSPlacement: false
+    shouldDisableRestartFailedEnvoyPods: false
+    envoyPodsNotReadyDuration: "5m"
 `;
 
 const rookBlock = `
