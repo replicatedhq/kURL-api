@@ -400,6 +400,8 @@ export interface EkcoConfig {
   rookShouldDisableReconcileMDSPlacement?: boolean;
   podImageOverrides?: Array<string>;
   enableInternalLoadBalancer?: boolean;
+  shouldDisableRestartFailedEnvoyPods?: boolean;
+  envoyPodsNotReadyDuration?: string;
 }
 
 export const ekcoConfigSchema = {
@@ -407,16 +409,18 @@ export const ekcoConfigSchema = {
   properties: {
     version: { type: "string" },
     s3Override: { type: "string", flag: "s3-override", description: "Override the download location for addon package distribution (used for CI/CD testing alpha addons)" },
-    nodeUnreachableToleration: { type: "string", flag: "ekco-node-unreachable-toleration-duration" , description: "How long a Node must have status unreachable before it’s purged" },
-    minReadyMasterNodeCount: { type: "number", flag: "ekco-min-ready-master-node-count" , description: "Ekco will not purge a master node if it would result in less than this many masters remaining" },
-    minReadyWorkerNodeCount: { type: "number", flag: "ekco-min-ready-worker-node-count" , description: "Ekco will not purge a worker node if it would result in less than this many workers remaining" },
-    shouldDisableRebootService: { type: "boolean", flag: "ekco-should-disable-reboot-service" , description: "Do not install the systemd shutdown service that cordons a node and deletes pods with PVC and Shared FS volumes mounted" },
+    nodeUnreachableToleration: { type: "string", flag: "ekco-node-unreachable-toleration-duration", description: "How long a Node must have status unreachable before it’s purged" },
+    minReadyMasterNodeCount: { type: "number", flag: "ekco-min-ready-master-node-count", description: "Ekco will not purge a master node if it would result in less than this many masters remaining" },
+    minReadyWorkerNodeCount: { type: "number", flag: "ekco-min-ready-worker-node-count", description: "Ekco will not purge a worker node if it would result in less than this many workers remaining" },
+    shouldDisableRebootService: { type: "boolean", flag: "ekco-should-disable-reboot-service", description: "Do not install the systemd shutdown service that cordons a node and deletes pods with PVC and Shared FS volumes mounted" },
     shouldDisableClearNodes: { type: "boolean", description: "Do not watch for unreachable nodes and force delete pods on them stuck in the terminating state" },
     shouldEnablePurgeNodes: { type: "boolean", description: "Watch for unreachable nodes and automatically remove them from the cluster" },
-    rookShouldUseAllNodes: { type: "boolean", flag: "ekco-rook-should-use-all-nodes" , description: "This will disable management of nodes in the CephCluster resource. If false, ekco will add nodes to the storage list and remove them when a node is purged" },
-    rookShouldDisableReconcileMDSPlacement: { type: "boolean", flag: "ekco-rook-should-disable-reconcile-mds-placement" , description: "This will disable reconciliation of CephFilesystem MDS placement when the cluster is scaled beyond one node" },
+    rookShouldUseAllNodes: { type: "boolean", flag: "ekco-rook-should-use-all-nodes", description: "This will disable management of nodes in the CephCluster resource. If false, ekco will add nodes to the storage list and remove them when a node is purged" },
+    rookShouldDisableReconcileMDSPlacement: { type: "boolean", flag: "ekco-rook-should-disable-reconcile-mds-placement", description: "This will disable reconciliation of CephFilesystem MDS placement when the cluster is scaled beyond one node" },
     podImageOverrides: { type: "array", items: { type: "string" }, flag: "pod-image-overrides", description: "Switch images in a pod when created" },
-    enableInternalLoadBalancer: { type: "boolean", flag: "ekco-enable-internal-load-balancer" , description: "Run haproxy on all nodes and forward to all Kubernetes API server pods" },
+    enableInternalLoadBalancer: { type: "boolean", flag: "ekco-enable-internal-load-balancer", description: "Run haproxy on all nodes and forward to all Kubernetes API server pods" },
+    shouldDisableRestartFailedEnvoyPods: { type: "boolean", flag: "ekco-should-disable-restart-failed-envoy-pods", description: "Disable restarting failed envoy pods" },
+    envoyPodsNotReadyDuration: { type: "string", flag: "ekco-envoy-pods-not-ready-duration", description: "Duration which to wait to restart failed envoy pods" },
   },
   required: ["version"],
   // additionalProperties: false,
