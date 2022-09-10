@@ -159,6 +159,52 @@ spec:
     excludeStorageClass: true
 `;
 
+const allLatest = `apiVersion: kurl.sh/v1beta1
+metadata:
+  name: allLatest
+spec:
+  kubernetes:
+    version: latest
+  docker:
+    version: latest
+  weave:
+    version: latest
+  antrea:
+    version: latest
+  contour:
+    version: latest
+  rook:
+    version: latest
+  openebs:
+    version: latest
+  minio:
+    version: latest
+  registry:
+    version: latest
+  prometheus:
+    version: latest
+  fluentd:
+    version: latest
+  kotsadm:
+    version: latest
+  velero:
+    version: latest
+  ekco:
+    version: latest
+  collectd:
+    version: latest
+  certManager:
+    version: latest
+  metricsServer:
+    version: latest
+  longhorn:
+    version: latest
+  sonobuoy:
+    version: latest
+  aws:
+    version: latest
+`;
+
 // Used for validation in all options test case
 const helmfileSpec = `repositories:
 - name: nginx-stable
@@ -1199,6 +1245,18 @@ spec:
     });
   });
 
+  describe("latest", () => {
+    it("should resolve all latest versions", async () => {
+      const i = await Installer.parse(allLatest).resolve(installerVersions);
+
+      _.each(_.keys(i.spec), (config: string) => {
+        if (i.spec[config].version) {
+          expect(i.spec[config].version).not.to.equal("latest", `expected ${config}.version to not equal 'latest'`);
+        }
+      });
+    });
+  });
+
   describe("antrea", () => {
     it("should parse", async () => {
       const i = await Installer.parse(everyOption).resolve(installerVersions);
@@ -1445,6 +1503,7 @@ spec:
   });
 
   describe("packages", () => {
+
     it("should convert camel case to kebab case", async () => {
       const i = await Installer.parse(everyOption).resolve(installerVersions);
       const pkgs = await i.packages(installerVersions, "");

@@ -9,6 +9,7 @@ import * as installerVersionsPkg from "../../installers/installer-versions";
 import * as packagePkg from "../../util/package";
 import * as kurlVersionPkg from "../../util/package/kurl-version";
 import { mockReq, mockRes } from 'sinon-express-mock';
+import { installerVersions } from "../fixtures/installer-versions";
 import * as sinon from "sinon";
 
 describe("When Installers controller is called ", () => {
@@ -23,7 +24,7 @@ describe("When Installers controller is called ", () => {
 
   const urlInstallerVersion = "v2022.03.23-0";
   const specInstallerVersion = "v2022.03.11-0";
-  const installerID = "8afe496";
+  const installerID = "1b76c06";
 
   const tmpl = `
 KURL_URL="{{= KURL_URL }}"
@@ -40,7 +41,7 @@ INSTALLER_YAML="{{= INSTALLER_YAML }}"`;
   const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
 metadata:
-  name: "0668700"
+  name: "1b76c06"
 spec:
   kubernetes:
     version: 1.19.9
@@ -54,16 +55,14 @@ spec:
   prometheus:
     version: 0.46.0
   sonobuoy:
-    version: 0.50.0
+    version: latest
+  metricsServer:
+    version: latest
 `;
 
 const installer = Installer.parse(yaml);
 
   it("should inject installerVersion provided as url parameter", async () => {
-
-    const installerVersions = {
-      "kubernetes": ["1.19.9"],
-    };
 
     const installerStoreStub = sinon.stub(installerStore, "getInstaller");
     installer.spec.kurl = undefined;
@@ -78,9 +77,6 @@ const installer = Installer.parse(yaml);
     const templatesStub = sinon.stub(templates, "fetchScriptTemplate");
     templatesStub.withArgs(urlInstallerVersion, "install.tmpl").resolves(tmpl);
 
-    const resolveStub = sinon.stub(Installer, "resolveVersion");
-    resolveStub.withArgs(sinon.match.any, sinon.match.any, sinon.match.any).resolves("Version");
-
     const packageMock = sinon.mock(packagePkg);
     packageMock.expects("getDistUrl").returns("DIST_URL");
 
@@ -98,16 +94,11 @@ const installer = Installer.parse(yaml);
     installerVersionsMock.restore();
 
     installerStoreStub.restore();
-    resolveStub.restore();
     metricStoreStub.restore();
     templatesStub.restore();
   });
 
   it("should overwrite installerVersion is spec with version in url", async () => {
-
-    const installerVersions = {
-      "kubernetes": ["1.19.9"],
-    };
 
     const installerStoreStub = sinon.stub(installerStore, "getInstaller");
     installer.spec.kurl = {additionalNoProxyAddresses: [], installerVersion: specInstallerVersion}
@@ -122,9 +113,6 @@ const installer = Installer.parse(yaml);
     const templatesStub = sinon.stub(templates, "fetchScriptTemplate");
     templatesStub.withArgs(urlInstallerVersion, "install.tmpl").resolves(tmpl);
 
-    const resolveStub = sinon.stub(Installer, "resolveVersion");
-    resolveStub.withArgs(sinon.match.any, sinon.match.any, sinon.match.any).resolves("Version");
-
     const packageMock = sinon.mock(packagePkg);
     packageMock.expects("getDistUrl").returns("DIST_URL");
 
@@ -142,16 +130,11 @@ const installer = Installer.parse(yaml);
     installerVersionsMock.restore();
 
     installerStoreStub.restore();
-    resolveStub.restore();
     metricStoreStub.restore();
     templatesStub.restore();
   });
 
   it("should use installerVersion in spec if none in url", async () => {
-
-    const installerVersions = {
-      "kubernetes": ["1.19.9"],
-    };
 
     const installerStoreStub = sinon.stub(installerStore, "getInstaller");
     installer.spec.kurl = {additionalNoProxyAddresses: [], installerVersion: specInstallerVersion}
@@ -166,14 +149,11 @@ const installer = Installer.parse(yaml);
     const templatesStub = sinon.stub(templates, "fetchScriptTemplate");
     templatesStub.withArgs(specInstallerVersion, "install.tmpl").resolves(tmpl);
 
-    const resolveStub = sinon.stub(Installer, "resolveVersion");
-    resolveStub.withArgs(sinon.match.any, sinon.match.any, sinon.match.any).resolves("Version");
-
     const packageMock = sinon.mock(packagePkg);
     packageMock.expects("getDistUrl").returns("DIST_URL");
     const kurlVersionMock = sinon.mock(kurlVersionPkg);
     kurlVersionMock.expects("getDefaultKurlVersion").withExactArgs().returns("v0.0.0-0");
-  
+
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
     installerVersionsMock.expects("getInstallerVersions").withArgs("DIST_URL", "v0.0.0-0").returns(installerVersions);
     installerVersionsMock.expects("getInstallerVersions").withArgs("DIST_URL", specInstallerVersion).returns(installerVersions);
@@ -191,55 +171,86 @@ const installer = Installer.parse(yaml);
     installerVersionsMock.restore();
 
     installerStoreStub.restore();
-    resolveStub.restore();
     metricStoreStub.restore();
     templatesStub.restore();
   });
 
   it("should use default installerVersion if none in spec or url", async () => {
-  
-    const installerVersions = {
-      "kubernetes": ["1.19.9"],
-    };
-  
+
     const installerStoreStub = sinon.stub(installerStore, "getInstaller");
     installer.spec.kurl = undefined;
     installerStoreStub.withArgs(installerID, installerVersions).resolves(
       installer
     );
-  
+
     const metricStoreStub = sinon.stub(metricsStore, "saveSaasScriptEvent");
     const GetInstallScriptEvent = { id: installerID, installerID: installerID, timestamp: new Date(), isAirgap: false, clientIP: "CLIENT_IP", userAgent: "USER_AGENT" };
     metricStoreStub.withArgs(GetInstallScriptEvent).resolves();
-  
+
     const templatesStub = sinon.stub(templates, "fetchScriptTemplate");
     templatesStub.withArgs("v0.0.0-0", "install.tmpl").resolves(tmpl);
-  
-    const resolveStub = sinon.stub(Installer, "resolveVersion");
-    resolveStub.withArgs(sinon.match.any, sinon.match.any, sinon.match.any).resolves("Version");
-  
+
     const packageMock = sinon.mock(packagePkg);
     packageMock.expects("getDistUrl").returns("DIST_URL");
     const kurlVersionMock = sinon.mock(kurlVersionPkg);
     kurlVersionMock.expects("getDefaultKurlVersion").withExactArgs().twice().returns("v0.0.0-0");
-  
+
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
     installerVersionsMock.expects("getInstallerVersions").twice().withArgs("DIST_URL", "v0.0.0-0").returns(installerVersions);
-  
+
     const installersController = new Installers(installerStore, templates, metricsStore);
     const script = await installersController.getInstaller(res, req, installerID, "");
     expect(script).to.contain(`KURL_VERSION="v0.0.0-0"`)
     expect(script).to.contain(`kurl:\n    installerVersion: v0.0.0-0\n    additionalNoProxyAddresses: []`);
-  
+
     packageMock.verify();
     packageMock.restore();
     kurlVersionMock.verify();
     kurlVersionMock.restore();
     installerVersionsMock.verify();
     installerVersionsMock.restore();
-  
+
     installerStoreStub.restore();
-    resolveStub.restore();
+    metricStoreStub.restore();
+    templatesStub.restore();
+  });
+
+  it("should resolve latest addon versions", async () => {
+
+    const installerStoreStub = sinon.stub(installerStore, "getInstaller");
+    installer.spec.kurl = undefined;
+    installerStoreStub.withArgs(installerID, installerVersions).resolves(
+      installer
+    );
+
+    const metricStoreStub = sinon.stub(metricsStore, "saveSaasScriptEvent");
+    const GetInstallScriptEvent = { id: installerID, installerID: installerID, timestamp: new Date(), isAirgap: false, clientIP: "CLIENT_IP", userAgent: "USER_AGENT" };
+    metricStoreStub.withArgs(GetInstallScriptEvent).resolves();
+
+    const templatesStub = sinon.stub(templates, "fetchScriptTemplate");
+    templatesStub.withArgs("v0.0.0-0", "install.tmpl").resolves(tmpl);
+
+    const packageMock = sinon.mock(packagePkg);
+    packageMock.expects("getDistUrl").returns("DIST_URL");
+    const kurlVersionMock = sinon.mock(kurlVersionPkg);
+    kurlVersionMock.expects("getDefaultKurlVersion").withExactArgs().twice().returns("v0.0.0-0");
+
+    const installerVersionsMock = sinon.mock(installerVersionsPkg);
+    installerVersionsMock.expects("getInstallerVersions").twice().withArgs("DIST_URL", "v0.0.0-0").returns(installerVersions);
+
+    const installersController = new Installers(installerStore, templates, metricsStore);
+    const script = await installersController.getInstaller(res, req, installerID, "");
+    expect(script).to.contain(`sonobuoy:\n    version: 0.56.10`);
+    expect(script).to.contain(`metricsServer:\n    version: 0.4.1`);
+
+    packageMock.verify();
+    packageMock.restore();
+    kurlVersionMock.verify();
+    kurlVersionMock.restore();
+    installerVersionsMock.verify();
+    installerVersionsMock.restore();
+
+    installerStoreStub.restore();
     metricStoreStub.restore();
     templatesStub.restore();
   });
