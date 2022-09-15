@@ -910,7 +910,7 @@ spec:
       });
     });
 
-    describe("Prometheus version that is incompatible with k8s version", () => {
+    describe("Prometheus version that is incompatible with k8s 1.23", () => {
       it("=> ErrorResponse", async () => {
         const yaml = `
 spec:
@@ -922,6 +922,21 @@ spec:
         const out = await i.validate(installerVersions);
 
         expect(out).to.deep.equal({ error: { message: "Prometheus versions less than or equal to 0.49.0-17.1.3 are not compatible with Kubernetes 1.22+" } });
+      });
+    });
+
+    describe("Prometheus version that is incompatible with k8s 1.25", () => {
+      it("=> ErrorResponse", async () => {
+        const yaml = `
+spec:
+  kubernetes:
+    version: 1.25.0
+  prometheus:
+    version: 0.58.0-39.12.1`;
+        const i = Installer.parse(yaml);
+        const out = await i.validate(installerVersions);
+
+        expect(out).to.deep.equal({ error: { message: "Prometheus versions less than or equal to 0.58.0-39.12.1 are not compatible with Kubernetes 1.25+" } });
       });
     });
 

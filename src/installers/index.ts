@@ -1361,6 +1361,12 @@ export class Installer {
         return {error: {message: "Prometheus versions less than or equal to 0.49.0-17.1.3 are not compatible with Kubernetes 1.22+"}};
       }
     }
+    // Prometheus versions <= 0.49.0-17.1.3 are incompatible with Kubernetes 1.25+
+    if (this.spec.prometheus && semver.lte(this.spec.prometheus.version, "0.58.0")) {
+      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+        return {error: {message: "Prometheus versions less than or equal to 0.58.0-39.12.1 are not compatible with Kubernetes 1.25+"}};
+      }
+    }
 
     if (this.spec.prometheus && this.spec.prometheus.version && this.spec.prometheus.serviceType) {
       if (this.spec.prometheus.serviceType != "" && this.spec.prometheus.serviceType != "ClusterIP" && this.spec.prometheus.serviceType != "NodePort") {
