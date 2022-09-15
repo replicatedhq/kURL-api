@@ -19,9 +19,15 @@ export interface IExternalInstallerVersion {
   sha256Sum?: string;
 }
 
-const installerVersionsCache: { [url: string]: IInstallerVersions } = {};
 let externalAddons: IExternalInstallerVersions = {};
 let externalAddonTimer: NodeJS.Timer;
+
+interface CachedIIinstallerVersions {
+  fetchTime: Date,
+  versions: IInstallerVersions,
+}
+
+const installerVersionsCache: { [url: string]: CachedIIinstallerVersions } = {};
 
 export function mergeAddonVersions(internalAddonVersions: IInstallerVersions, externalAddons: IExternalInstallerVersions, kurlVersion: string) {
   const addons: IInstallerVersions = {};
@@ -51,8 +57,12 @@ export function mergeAddonVersions(internalAddonVersions: IInstallerVersions, ex
 async function getInternalAddonVersions(distUrl: string, kurlVersion: string) {
   const url = getPackageUrl(distUrl, kurlVersion, "supported-versions-gen.json");
   if (url in installerVersionsCache && installerVersionsCache[url]) {
-    return installerVersionsCache[url];
+    const elapsed = Date.now() - installerVersionsCache[url].fetchTime.valueOf()
+    if (elapsed < 60 * 1000) { // if a version has been in the cache for more than 60 seconds, fetch it again
+      return installerVersionsCache[url].versions;
+    }
   }
+
   const res = await fetch(url);
   if (res.status === 404 || res.status === 403) {
     throw new HTTPError(404, `supported versions file not found for ${url}`);
@@ -69,8 +79,8 @@ async function getInternalAddonVersions(distUrl: string, kurlVersion: string) {
       installerVersions[_.camelCase(addon)] = installerVersions[addon];
     }
   });
-  installerVersionsCache[url] = installerVersions;
-  return installerVersionsCache[url];
+  installerVersionsCache[url] = { fetchTime: new Date(), versions: installerVersions};
+  return installerVersionsCache[url].versions;
 }
 
 async function externalAddonHandler() {
