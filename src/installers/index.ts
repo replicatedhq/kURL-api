@@ -822,12 +822,16 @@ export class Installer {
     i.spec.kubernetes = { version: "1.24.x" };
     i.spec.containerd = { version: this.toDotXVersion(installerVersions.containerd[0]) };
     i.spec.weave = { version: this.toDotXVersion(installerVersions.weave[0]) };
-    i.spec.longhorn = { version: this.toDotXVersion(installerVersions.longhorn[0]) };
-    i.spec.minio = { version: installerVersions.minio[0] };
     i.spec.ekco = { version: "latest" };
     i.spec.contour = { version: this.toDotXVersion(installerVersions.contour[0]) };
     i.spec.registry = { version: this.toDotXVersion(installerVersions.registry[0]) };
     i.spec.prometheus = { version: this.toDotXVersion(installerVersions.prometheus[0]) };
+    i.spec.minio = { version: installerVersions.minio[0] };
+    i.spec.openebs = {
+      version: this.toDotXVersion(installerVersions.openebs[0]),
+      isLocalPVEnabled: true,
+      localPVStorageClassName: "default",
+    };
 
     return i;
   }
