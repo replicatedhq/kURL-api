@@ -936,7 +936,7 @@ spec:
         const i = Installer.parse(yaml);
         const out = await i.validate(installerVersions);
 
-        expect(out).to.deep.equal({ error: { message: "Prometheus versions less than or equal to 0.58.0-39.12.1 are not compatible with Kubernetes 1.25+" } });
+        expect(out).to.deep.equal({ error: { message: "Prometheus versions less than or equal to 0.59.0 are not compatible with Kubernetes 1.25+" } });
       });
     });
 
