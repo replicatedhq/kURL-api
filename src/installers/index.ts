@@ -1342,9 +1342,15 @@ export class Installer {
     }
 
     // Rook 1.0.4 is incompatible with Kubernetes 1.20+
-    if (this.spec.rook && this.spec.rook.version === "1.0.4") {
+    if (this.spec.rook && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.1.0")) {
       if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.20.0")) {
         return {error: {message: "Rook 1.0.4 is not compatible with Kubernetes 1.20+"}};
+      }
+    }
+    // Rook < v1.9.10 is incompatible with Kubernetes 1.25+
+    if (this.spec.rook && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.9.10")) {
+      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+        return {error: {message: "Rook versions less than or equal to 1.9.10 are not compatible with Kubernetes 1.25+"}};
       }
     }
 
@@ -1361,6 +1367,12 @@ export class Installer {
         return {error: {message: "Prometheus versions less than or equal to 0.49.0-17.1.3 are not compatible with Kubernetes 1.22+"}};
       }
     }
+    // Prometheus versions <= 0.59.0 are incompatible with Kubernetes 1.25+
+    if (this.spec.prometheus && semver.lte(this.spec.prometheus.version, "0.59.0")) {
+      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+        return {error: {message: "Prometheus versions less than or equal to 0.59.0 are not compatible with Kubernetes 1.25+"}};
+      }
+    }
 
     if (this.spec.prometheus && this.spec.prometheus.version && this.spec.prometheus.serviceType) {
       if (this.spec.prometheus.serviceType != "" && this.spec.prometheus.serviceType != "ClusterIP" && this.spec.prometheus.serviceType != "NodePort") {
@@ -1370,6 +1382,13 @@ export class Installer {
       if (installerVersions.prometheus.indexOf(this.spec.prometheus.version) != -1 &&
         installerVersions.prometheus.indexOf(this.spec.prometheus.version) > installerVersions.prometheus.indexOf("0.48.1-16.10.0")) {
         return {error: {message: `Prometheus service types are supported for version "0.48.1-16.10.0" and later, not "${this.spec.prometheus.version}"`}};
+      }
+    }
+
+    // Longhorn < v1.4.0 is incompatible with Kubernetes 1.25+
+    if (this.spec.longhorn && this.spec.longhorn.version != "latest" && semver.lte(this.spec.longhorn.version, "1.4.0")) {
+      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+        return {error: {message: "Longhorn versions less than or equal to 1.4.0 are not compatible with Kubernetes 1.25+"}};
       }
     }
 
