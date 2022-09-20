@@ -90,5 +90,6 @@ export async function startExternalAddonPolling() {
 
 export async function getInstallerVersions(distUrl: string, kurlVersion: string): Promise<IInstallerVersions> {
   const internalAddonVersions = await getInternalAddonVersions(distUrl, kurlVersion);
-  return mergeAddonVersions(internalAddonVersions, externalAddons, kurlVersion);
+  return internalAddonVersions;
+  // return mergeAddonVersions(internalAddonVersions, externalAddons, kurlVersion);
 }
