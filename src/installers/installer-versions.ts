@@ -9,29 +9,40 @@ export interface IInstallerVersions {
   [addon: string]: string[];
 }
 
+export interface IExternalInstallerVersions {
+  [addon: string]: IExternalInstallerVersion[];
+}
+
+export interface IExternalInstallerVersion {
+  version: string;
+  kurlVersionCompatibilityRange?: string;
+}
+
 const installerVersionsCache: { [url: string]: IInstallerVersions } = {};
-let externalAddons = {};
+let externalAddons: IExternalInstallerVersions = {};
 let externalAddonTimer: NodeJS.Timer;
 
-function mergeAddonVersions(internalAddonVersions: IInstallerVersions, kurlVersion: string) {
+export function mergeAddonVersions(internalAddonVersions: IInstallerVersions, externalAddons: IExternalInstallerVersions, kurlVersion: string) {
   const addons: IInstallerVersions = {};
   Object.keys(externalAddons).forEach(externalAddonName => {
-    const fileName = externalAddonName.slice(0, externalAddonName.length - 7); // trim off .tar.gz
-    const [name, version] = fileName.split("-");
-    if (!kurlVersion || semver.gte(version, kurlVersion, true)) {
-      if(!addons[name]) {
-        addons[name] = [version]
-      } else {
-        addons[name].unshift(version);
+    externalAddons[externalAddonName].forEach(externalAddon => {
+      let satisfies = false;
+      if (externalAddon.kurlVersionCompatibilityRange) {
+        satisfies = semver.satisfies(kurlVersion, externalAddon.kurlVersionCompatibilityRange, {includePrerelease: true, loose: true});
       }
-    }
+      if (satisfies) {
+        if(!(externalAddonName in addons)) {
+          addons[externalAddonName] = [];
+        }
+        addons[externalAddonName].push(externalAddon.version);
+      }
+    });
   });
   Object.keys(internalAddonVersions).forEach(internalAddonName => {
-    if (!addons[internalAddonName]) {
-      addons[internalAddonName] = internalAddonVersions[internalAddonName];
-    } else {
-      addons[internalAddonName].push(...internalAddonVersions[internalAddonName]);
+    if(!(internalAddonName in addons)) {
+      addons[internalAddonName] = [];
     }
+    addons[internalAddonName].push(...internalAddonVersions[internalAddonName]);
   });
   return addons;
 }
@@ -79,5 +90,6 @@ export async function startExternalAddonPolling() {
 
 export async function getInstallerVersions(distUrl: string, kurlVersion: string): Promise<IInstallerVersions> {
   const internalAddonVersions = await getInternalAddonVersions(distUrl, kurlVersion);
-  return mergeAddonVersions(internalAddonVersions, kurlVersion);
+  return internalAddonVersions;
+  // return mergeAddonVersions(internalAddonVersions, externalAddons, kurlVersion);
 }
