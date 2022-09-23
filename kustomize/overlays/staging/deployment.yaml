@@ -45,8 +45,10 @@ spec:
           value: "1"
         - name: KURL_URL
           value: https://staging.kurl.sh
-        - name: DIST_URL
+        - name: DIST_URL # comment out to use s3 directly instead of through cloudflare
           value: https://s3-staging.kurl.sh/staging
+        - name: KURL_BUCKET
+        - value: kurl-sh
         - name: NODE_ENV
           value: staging
         - name: REPLICATED_APP_URL

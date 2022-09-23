@@ -45,6 +45,8 @@ spec:
           value: "1"
         - name: KURL_URL
           value: https://kurl.sh
+        - name: DIST_URL # comment out to use s3 directly instead of through cloudflare
+          value: https://s3.kurl.sh/dist
         - name: KURL_BUCKET
           value: kurl-sh
         - name: NODE_ENV
