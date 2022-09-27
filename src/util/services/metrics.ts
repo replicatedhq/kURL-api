@@ -1,7 +1,7 @@
 import { Service } from "@tsed/common";
 import * as mysql from "promise-mysql";
 import { MysqlWrapper } from "./mysql";
-import * as uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 export interface GetInstallScriptEvent {
   id?: string;
@@ -37,7 +37,7 @@ export class MetricsStore {
       ?
     )`;
     const v = [
-      uuid.v4(),
+      uuidv4(),
       e.installerID,
       e.timestamp,
       e.isAirgap,
