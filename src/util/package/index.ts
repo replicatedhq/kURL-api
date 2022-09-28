@@ -13,13 +13,24 @@ export function getDistUrl(): string {
   if (process.env["DIST_URL"]) {
     return process.env["DIST_URL"] as string;
   }
-  let distUrl = `https://${process.env["KURL_BUCKET"]}.s3.amazonaws.com`;
+  let distUrl = getBucketUrl();
   if (process.env["NODE_ENV"] === "production") {
     distUrl += "/dist";
   } else {
     distUrl += "/staging";
   }
   return distUrl;
+}
+
+export function getExternalUrl(): string {
+  return `${getBucketUrl()}/external`;
+}
+
+export function getBucketUrl(): string {
+  if (process.env["BUCKET_URL"]) {
+    return process.env["BUCKET_URL"] as string;
+  }
+  return `https://${process.env["KURL_BUCKET"]}.s3.amazonaws.com`;
 }
 
 export function kurlVersionOrDefault(kurlVersion?: string, i?: Installer): string {

@@ -13,7 +13,7 @@ import { logger } from "../logger";
 import { MetricsStore } from "../util/services/metrics";
 import * as requestIP from "request-ip";
 import { getDistUrl, getPackageUrlPrefix, kurlVersionOrDefault } from "../util/package";
-import { getInstallerVersions } from "../installers/installer-versions";
+import { getExternalAddonVersions, getInstallerVersions } from "../installers/installer-versions";
 
 interface ErrorResponse {
   error: any;
@@ -75,7 +75,8 @@ export class Bundle {
       return notFoundResponse;
     }
 
-    installer = await installer.resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    installer = await installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 

@@ -471,6 +471,14 @@ spec:
     installerVersion: v2022.03.04-1
 `;
 
+const kotsExternal = `
+spec:
+  kubernetes:
+    version: 1.25.0
+  kotsadm:
+    version: 1.85.0
+`;
+
 describe("Installer", () => {
   describe("parse", () => {
     it("parses yaml with type meta and name", () => {
@@ -1292,7 +1300,7 @@ spec:
 
   describe("latest", () => {
     it("should resolve all latest versions", async () => {
-      const i = await Installer.parse(allLatest).resolve(installerVersions);
+      const i = await Installer.parse(allLatest).resolve(installerVersions, {});
 
       _.each(_.keys(i.spec), (config: string) => {
         if (i.spec[config].version) {
@@ -1304,7 +1312,7 @@ spec:
 
   describe("antrea", () => {
     it("should parse", async () => {
-      const i = await Installer.parse(everyOption).resolve(installerVersions);
+      const i = await Installer.parse(everyOption).resolve(installerVersions, {});
 
       expect(i.spec.antrea).to.deep.equal({
         version: "1.4.0",
@@ -1550,7 +1558,7 @@ spec:
   describe("packages", () => {
 
     it("should convert camel case to kebab case", async () => {
-      const i = await Installer.parse(everyOption).resolve(installerVersions);
+      const i = await Installer.parse(everyOption).resolve(installerVersions, {});
       const pkgs = await i.packages(installerVersions, "");
 
       const hasCertManager = _.some(pkgs, (pkg) => {
@@ -1652,6 +1660,17 @@ spec:
         return pkg === "kubernetes-0.0.0";
       });
       expect(hasKubernetes000).to.equal(false);
+    });
+
+    it("should resolve external add-on package url", async () => {
+      const i = await Installer.parse(kotsExternal).resolve(installerVersions, {kotsadm: [{version: "1.84.0"}, {version: "1.85.0"}]});
+      const pkgs = await i.packages(installerVersions, "");
+
+      const kotsadm = _.find(pkgs, (pkg) => {
+        return pkg.includes("/kotsadm-");
+      });
+
+      expect(kotsadm).to.equal("https://undefined.s3.amazonaws.com/external/kotsadm-1.85.0.tar.gz");
     });
   });
 

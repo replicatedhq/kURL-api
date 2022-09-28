@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -343,11 +342,7 @@ func downloadImage(ctx context.Context, image string, destPath string) error {
 func pipeAddonArchive(dst *tar.Writer, srcURL string) error {
 	resp, err := http.Get(srcURL)
 	if err != nil {
-		filename := path.Base(srcURL)
-		resp, err = http.Get(fmt.Sprintf("https://kurl-sh.s3.amazonaws.com/external/%s", filename))
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	defer resp.Body.Close()
 

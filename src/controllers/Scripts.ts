@@ -11,7 +11,7 @@ import { Templates } from "../util/services/templates";
 import { MetricsStore } from "../util/services/metrics";
 import { logger } from "../logger";
 import * as requestIP from "request-ip";
-import { getInstallerVersions } from "../installers/installer-versions";
+import { getExternalAddonVersions, getInstallerVersions } from "../installers/installer-versions";
 import { getDistUrl, kurlVersionOrDefault } from "../util/package";
 
 interface ErrorResponse {
@@ -60,7 +60,8 @@ export class Installers {
       return notFoundResponse;
     }
 
-    installer = await installer.resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    installer = await installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
@@ -93,11 +94,12 @@ export class Installers {
       return notFoundResponse;
     }
 
-    installer = await installer.resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    installer = await installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
-    installer = await installer.resolve(installerVersions);
+    installer = await installer.resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -122,7 +124,8 @@ export class Installers {
       return notFoundResponse;
     }
 
-    installer = await installer.resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    installer = await installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
@@ -141,7 +144,8 @@ export class Installers {
     const kurlVersion = kurlVersionOrDefault(kvarg);
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
-    const installer = await (Installer.latest(installerVersions)).resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    const installer = await (Installer.latest(installerVersions)).resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -176,7 +180,8 @@ export class Installers {
       return notFoundResponse;
     }
 
-    installer = await installer.resolve(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    installer = await installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 

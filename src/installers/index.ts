@@ -9,9 +9,9 @@ import * as semver from "semver";
 import { MysqlWrapper } from "../util/services/mysql";
 import { instrumented } from "monkit";
 import { Forbidden } from "../server/errors";
-import {getDistUrl, getPackageUrl} from "../util/package";
-import { IInstallerVersions } from "./installer-versions";
+import { IExternalInstallerVersion, IExternalInstallerVersions, IInstallerVersions } from "./installer-versions";
 import * as hash from "object-hash";
+import { getExternalUrl } from "../util/package";
 
 interface ErrorResponse {
   error: any;
@@ -1208,12 +1208,19 @@ export class Installer {
     return obj;
   }
 
-  public async resolve(installerVersions: IInstallerVersions): Promise<Installer> {
+  public async resolve(installerVersions: IInstallerVersions, externalVersions: IExternalInstallerVersions): Promise<Installer> {
     const i = this.clone();
 
     await Promise.all(_.each(_.keys(i.spec), async (config: string) => {
-      if (i.spec[config].version) {
-        i.spec[config].version = await Installer.resolveVersion(installerVersions, config, i.spec[config].version);
+      let version = i.spec[config].version;
+      if (version) {
+        version = await Installer.resolveVersion(installerVersions, config, version);
+        i.spec[config].version = version;
+      }
+      // hijack s3 override for external add-on package urls
+      const externalVersion = getExternalAddonVersion(externalVersions, config, version);
+      if (externalVersion) {
+        i.spec[config].s3Override = `${getExternalUrl()}/${Installer.generatePackageName(config, version)}.tar.gz`;
       }
     }));
 
@@ -1706,4 +1713,12 @@ export class InstallerStore {
       conn.release();
     }
   }
+}
+
+function getExternalAddonVersion(externalVersions: IExternalInstallerVersions, addon: string, version: string): IExternalInstallerVersion | undefined {
+  const addonVersions = externalVersions[addon];
+  if (!addonVersions) {
+    return;
+  }
+  return addonVersions.find(externalVersion => externalVersion.version === version);
 }
