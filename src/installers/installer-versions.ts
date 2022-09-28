@@ -16,6 +16,7 @@ export interface IExternalInstallerVersions {
 export interface IExternalInstallerVersion {
   version: string;
   kurlVersionCompatibilityRange?: string;
+  sha256Sum?: string;
 }
 
 const installerVersionsCache: { [url: string]: IInstallerVersions } = {};
@@ -90,6 +91,12 @@ export async function startExternalAddonPolling() {
 
 export async function getInstallerVersions(distUrl: string, kurlVersion: string): Promise<IInstallerVersions> {
   const internalAddonVersions = await getInternalAddonVersions(distUrl, kurlVersion);
-  return internalAddonVersions;
-  // return mergeAddonVersions(internalAddonVersions, externalAddons, kurlVersion);
+  if (process.env.EXCLUDE_EXTERNAL_ADDONS) {
+    return internalAddonVersions;
+  }
+  return mergeAddonVersions(internalAddonVersions, externalAddons, kurlVersion);
+}
+
+export function getExternalAddonVersions(): IExternalInstallerVersions {
+  return externalAddons;
 }

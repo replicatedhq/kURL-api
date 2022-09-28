@@ -502,7 +502,7 @@ describe("PUT /installer/<id>", () => {
 
 describe("GET /<installerID>", () => {
   describe("/latest", async () => {
-    const latestResolve = await (Installer.latest(installerVersions)).resolve(installerVersions);
+    const latestResolve = await (Installer.latest(installerVersions)).resolve(installerVersions, {});
 
     it(`injects k8s ${latestResolve.spec.kubernetes?.version}, weave ${latestResolve.spec.weave?.version}, rook ${latestResolve.spec.rook?.version}, contour ${latestResolve.spec.contour?.version}, registry ${latestResolve.spec.registry?.version}, prometheus ${latestResolve.spec.prometheus?.version}, docker ${latestResolve.spec.docker?.version}`, async () => {
       const script = await client.getInstallScript("latest");
@@ -560,7 +560,7 @@ describe("GET /<installerID>", () => {
       const i = Installer.parse(velero);
       const script = await client.getInstallScript(id);
 
-      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions)).spec.velero?.version}`));
+      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions, {})).spec.velero?.version}`));
     });
   });
 
@@ -576,7 +576,7 @@ describe("GET /<installerID>", () => {
       const i = Installer.parse(minio);
       const script = await client.getInstallScript(id);
 
-      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions)).spec.minio?.version}`));
+      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions, {})).spec.minio?.version}`));
     });
   });
 
@@ -592,7 +592,7 @@ describe("GET /<installerID>", () => {
       const i = Installer.parse(openebs);
       const script = await client.getInstallScript(id);
 
-      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions)).spec.openebs?.version}`));
+      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions, {})).spec.openebs?.version}`));
     });
   });
 
@@ -608,7 +608,7 @@ describe("GET /<installerID>", () => {
       const i = Installer.parse(ekco);
       const script = await client.getInstallScript(id);
 
-      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions)).spec.ekco?.version}`));
+      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions, {})).spec.ekco?.version}`));
     });
   });
 
@@ -624,7 +624,7 @@ describe("GET /<installerID>", () => {
       const i = Installer.parse(rookBlock);
       const script = await client.getInstallScript(id);
 
-      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions)).spec.rook?.version}`));
+      expect(script).to.match(new RegExp(`version: ${(await i.resolve(installerVersions, {})).spec.rook?.version}`));
     });
   });
 
@@ -663,7 +663,7 @@ describe("GET /<installerID>", () => {
 
 describe("GET /<installerID>/join.sh", () => {
   describe("/latest/join.sh", async () => {
-    const latestResolve = await (Installer.latest(installerVersions)).resolve(installerVersions);
+    const latestResolve = await (Installer.latest(installerVersions)).resolve(installerVersions, {});
 
     it(`injects k8s ${latestResolve.spec.kubernetes?.version}, weave ${latestResolve.spec.weave?.version}, rook ${latestResolve.spec.rook?.version}, contour ${latestResolve.spec.contour?.version}, registry ${latestResolve.spec.registry?.version}, prometheus ${latestResolve.spec.prometheus?.version}`, async () => {
       const script = await client.getJoinScript("latest");

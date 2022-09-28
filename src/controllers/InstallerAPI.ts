@@ -12,7 +12,7 @@ import {
 import { instrumented } from "monkit";
 import { Installer, InstallerObject, InstallerStore } from "../installers";
 import decode from "../util/jwt";
-import { getInstallerVersions } from "../installers/installer-versions";
+import { getExternalAddonVersions, getInstallerVersions } from "../installers/installer-versions";
 import { getDistUrl, kurlVersionOrDefault } from "../util/package";
 
 interface ErrorResponse {
@@ -95,7 +95,8 @@ export class Installers {
     }
     i.id = i.hash();
 
-    const err = await (await i.resolve(installerVersions)).validate(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -192,7 +193,8 @@ export class Installers {
       return notFoundResponse;
     }
     if (resolve) {
-      installer = await installer.resolve(installerVersions);
+      const externalVersions = getExternalAddonVersions();
+      installer = await installer.resolve(installerVersions, externalVersions);
     }
     if (installer.id === "latest") {
       installer.id = "";
@@ -235,7 +237,8 @@ export class Installers {
 
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
-    const err = await (await i.resolve(installerVersions)).validate(installerVersions);
+    const externalVersions = getExternalAddonVersions();
+    const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -293,8 +296,9 @@ export class Installers {
       const kurlVersion = kurlVersionOrDefault();
 
       const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
-  
-      const err = await (await i.resolve(installerVersions)).validate(installerVersions);
+
+      const externalVersions = getExternalAddonVersions();
+      const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
       if (err) {
         response.status(400);
         return err;
