@@ -75,8 +75,11 @@ async function getInternalAddonVersions(distUrl: string, kurlVersion: string) {
 
 async function externalAddonHandler() {
   try {
-    const response = await fetch("https://kurl-sh.s3.amazonaws.com/external/addon-registry.json");
-    externalAddons = await response.json();
+    const res = await fetch("https://kurl-sh.s3.amazonaws.com/external/addon-registry.json");
+    if (!res.ok) {
+      throw new Error(`failed to fetch addon-registry.json with status ${res.status}`);
+    }
+    externalAddons = await res.json();
   } catch (error) {
     logger.error(error, "failed to pull external addon registry.");
   }
@@ -85,7 +88,7 @@ async function externalAddonHandler() {
 export async function startExternalAddonPolling() {
   if (!externalAddonTimer) {
     await externalAddonHandler();
-    externalAddonTimer = setInterval(externalAddonHandler, 15 * 60 * 1000);
+    externalAddonTimer = setInterval(externalAddonHandler, 5 * 60 * 1000); // 5 minutes
   }
 }
 
