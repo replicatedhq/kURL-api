@@ -58,7 +58,9 @@ async function getInternalAddonVersions(distUrl: string, kurlVersion: string) {
   const url = getPackageUrl(distUrl, kurlVersion, "supported-versions-gen.json");
   if (url in installerVersionsCache && installerVersionsCache[url]) {
     const elapsed = Date.now() - installerVersionsCache[url].fetchTime.valueOf()
-    if (elapsed < 60 * 1000) { // if a version has been in the cache for more than 60 seconds, fetch it again
+    // if a version has been in the cache for more than 60 seconds, fetch it again.
+    // unless the environment is production, in which case use the cached version anyways.
+    if (elapsed < 60 * 1000 && process.env["NODE_ENV"] !== "production") {
       return installerVersionsCache[url].versions;
     }
   }
