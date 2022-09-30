@@ -56,7 +56,7 @@ spec:
     const versions = {
       "kubernetes": ["1.19.9"],
     };
-    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, "DIST_URL", "");
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, "DIST_URL", "FALLBACK_URL",  "");
     expect(manifest.INSTALLER_YAML).to.contain(`name: '0668700'`);
   });
 });
@@ -66,7 +66,8 @@ describe("When rendering installer yaml with kurlVersion from url", () => {
   it("injects the kurl version from the argument", async () => {
 
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
-    const distUrl = "DIST_URL"
+    const distUrl = "DIST_URL";
+    const fallbackUrl = "FALLBACK_URL";
     const kurlInstallerVersion = "v2022.03.23-0";
 
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
@@ -93,7 +94,7 @@ spec:
     const versions = {
       "kubernetes": ["1.19.9"],
     };
-    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, kurlInstallerVersion);
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, fallbackUrl, kurlInstallerVersion);
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlInstallerVersion}`);
 
     installerVersionsMock.verify();
@@ -106,7 +107,8 @@ describe("When rendering installer yaml with kurlVersion in spec", () => {
   it("includes the kurl version from the spec", async () => {
 
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
-    const distUrl = "DIST_URL"
+    const distUrl = "DIST_URL";
+    const fallbackUrl = "FALLBACK_URL";
     const kurlInstallerVersion = "v2022.03.23-0";
 
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
@@ -135,7 +137,7 @@ spec:
     const versions = {
       "kubernetes": ["1.19.9"],
     };
-    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, "");
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, fallbackUrl, "");
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlInstallerVersion}`);
 
     installerVersionsMock.verify();
@@ -148,7 +150,8 @@ describe("When rendering installer yaml with kurlVersion in spec and url", () =>
   it("kurlVersion from the url overwrites version in spec", async () => {
 
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
-    const distUrl = "DIST_URL"
+    const distUrl = "DIST_URL";
+    const fallbackUrl = "FALLBACK_URL";
     const kurlUrlInstallerVersion = "v2022.03.23-0";
     const specKurlInstallerVersion = "v2022.03.11-0";
 
@@ -179,7 +182,7 @@ spec:
     const versions = {
       "kubernetes": ["1.19.9"],
     };
-    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, kurlUrlInstallerVersion);
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, fallbackUrl, kurlUrlInstallerVersion);
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: ${kurlUrlInstallerVersion}`);
     expect(manifest.INSTALLER_YAML).to.contain(`airgap: false`);
 
@@ -194,6 +197,7 @@ describe("When rendering installer yaml with kurlVersion in neither spec nor url
   
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
     const distUrl = "DIST_URL"
+    const fallbackUrl = "FALLBACK_URL"
 
     const yaml = `apiVersion: cluster.kurl.sh/v1beta1
 kind: Installer
@@ -219,7 +223,7 @@ spec:
     const versions = {
       "kubernetes": ["1.19.9"],
     };
-    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, "v0.0.0-0");
+    const manifest = manifestFromInstaller(installer, "KURL_URL", "APP_URL", versions, distUrl, fallbackUrl, "v0.0.0-0");
     expect(manifest.INSTALLER_YAML).to.contain(`installerVersion: v0.0.0-0`);
 
     installerVersionsMock.verify();

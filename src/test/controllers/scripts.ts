@@ -29,6 +29,7 @@ describe("When Installers controller is called ", () => {
   const tmpl = `
 KURL_URL="{{= KURL_URL }}"
 DIST_URL="{{= DIST_URL }}"
+FALLBACK_URL="{{= FALLBACK_URL }}"
 INSTALLER_ID="{{= INSTALLER_ID }}"
 KURL_VERSION="{{= KURL_VERSION }}"
 CRICTL_VERSION=1.20.0
