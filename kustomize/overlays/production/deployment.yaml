@@ -51,5 +51,3 @@ spec:
           value: kurl-sh
         - name: NODE_ENV
           value: production
-        - name: EXCLUDE_EXTERNAL_ADDONS # disable external add-on support on production for now
-          value: "1"
