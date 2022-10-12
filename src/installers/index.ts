@@ -398,6 +398,7 @@ export interface EkcoConfig {
   shouldEnablePurgeNodes?: boolean;
   rookShouldUseAllNodes?: boolean;
   rookShouldDisableReconcileMDSPlacement?: boolean;
+  rookShouldDisableReconcileCephCSIResources?: boolean;
   podImageOverrides?: Array<string>;
   enableInternalLoadBalancer?: boolean;
   shouldDisableRestartFailedEnvoyPods?: boolean;
@@ -417,6 +418,7 @@ export const ekcoConfigSchema = {
     shouldEnablePurgeNodes: { type: "boolean", description: "Watch for unreachable nodes and automatically remove them from the cluster" },
     rookShouldUseAllNodes: { type: "boolean", flag: "ekco-rook-should-use-all-nodes", description: "This will disable management of nodes in the CephCluster resource. If false, ekco will add nodes to the storage list and remove them when a node is purged" },
     rookShouldDisableReconcileMDSPlacement: { type: "boolean", flag: "ekco-rook-should-disable-reconcile-mds-placement", description: "This will disable reconciliation of CephFilesystem MDS placement when the cluster is scaled beyond one node" },
+    rookShouldDisableReconcileCephCSIResources: { type: "boolean", flag: "ekco-rook-should-disable-reconcile-ceph-csi-resources", description: "This will disable reconciliation of Ceph CSI provisioner and plugin resources to their recommendations once the cluster is scaled to three nodes" },
     podImageOverrides: { type: "array", items: { type: "string" }, flag: "pod-image-overrides", description: "Switch images in a pod when created" },
     enableInternalLoadBalancer: { type: "boolean", flag: "ekco-enable-internal-load-balancer", description: "Run haproxy on all nodes and forward to all Kubernetes API server pods" },
     shouldDisableRestartFailedEnvoyPods: { type: "boolean", flag: "ekco-should-disable-restart-failed-envoy-pods", description: "Disable restarting failed envoy pods" },

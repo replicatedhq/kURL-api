@@ -177,6 +177,7 @@ spec:
     shouldEnablePurgeNodes: false
     rookShouldUseAllNodes: false
     rookShouldDisableReconcileMDSPlacement: false
+    rookShouldDisableReconcileCephCSIResources: false
     shouldDisableRestartFailedEnvoyPods: false
     envoyPodsNotReadyDuration: "5m"
 `;
