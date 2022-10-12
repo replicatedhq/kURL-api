@@ -113,7 +113,7 @@ export class Installers {
   @Get("/version/:version")
   public async getInstallerVersions(
     @Res() response: Express.Response,
-    @PathParams("version") version: string,
+    @PathParams("version") version: string|undefined,
   ): Promise<any> {
     response.type("application/json");
 
