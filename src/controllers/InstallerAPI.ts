@@ -117,7 +117,7 @@ export class Installers {
   ): Promise<any> {
     response.type("application/json");
 
-    let kurlVersion = version
+    let kurlVersion = version;
     if (version == undefined) {
         kurlVersion = kurlVersionOrDefault();
     }
