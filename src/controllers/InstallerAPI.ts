@@ -117,10 +117,7 @@ export class Installers {
   ): Promise<any> {
     response.type("application/json");
 
-    let kurlVersion = version;
-    if (!version) {
-        kurlVersion = kurlVersionOrDefault();
-    }
+    const kurlVersion = (version != undefined) ? version : kurlVersionOrDefault();
 
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
