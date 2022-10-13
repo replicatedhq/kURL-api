@@ -110,17 +110,20 @@ export class Installers {
   }
 
   @Get("/")
+  @Get("/version/:version")
   public async getInstallerVersions(
     @Res() response: Express.Response,
+    @PathParams("version") version: string|undefined,
   ): Promise<any> {
     response.type("application/json");
 
-    const kurlVersion = kurlVersionOrDefault();
+    const kurlVersion = version ? version : kurlVersionOrDefault();
 
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     const resp = _.reduce(installerVersions, (accm, value, key) => {
       accm[key] = _.concat(["latest"], value);
+      accm[key] = [...new Set(accm[key])];
       return accm;
     }, {});
 
