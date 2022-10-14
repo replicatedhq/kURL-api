@@ -37,15 +37,17 @@ import (
 const upstream = "http://localhost:3000"
 
 var activeStreams int64 = 0
+var version string
 
 func main() {
-	log.Printf("Commit %s", os.Getenv("VERSION"))
+	version = os.Getenv("VERSION")
+	log.Printf("Commit %s", version)
 
 	if bugsnagKey := os.Getenv("BUGSNAG_KEY"); bugsnagKey != "" {
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:       bugsnagKey,
 			ReleaseStage: os.Getenv("ENVIRONMENT"),
-			AppVersion:   os.Getenv("VERSION"),
+			AppVersion:   version,
 		})
 	}
 
@@ -465,14 +467,16 @@ func allowRegistry(image string) bool {
 }
 
 type HealthzResponse struct {
-	IsAlive       bool  `json:"is_alive"`
-	ActiveStreams int64 `json:"active_streams"`
+	IsAlive       bool   `json:"is_alive"`
+	ActiveStreams int64  `json:"active_streams"`
+	Version       string `json:"version"`
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {
 	healthzResponse := HealthzResponse{
 		IsAlive:       true,
 		ActiveStreams: atomic.LoadInt64(&activeStreams),
+		Version:       version,
 	}
 	response, err := json.Marshal(healthzResponse)
 	if err != nil {
