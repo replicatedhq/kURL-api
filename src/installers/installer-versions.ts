@@ -17,6 +17,7 @@ export interface IExternalInstallerVersion {
   version: string;
   kurlVersionCompatibilityRange?: string;
   sha256Sum?: string;
+  isPrerelease?: boolean;
 }
 
 let externalAddons: IExternalInstallerVersions = {};
@@ -33,15 +34,17 @@ export function mergeAddonVersions(internalAddonVersions: IInstallerVersions, ex
   const addons: IInstallerVersions = {};
   Object.keys(externalAddons).forEach(externalAddonName => {
     externalAddons[externalAddonName].forEach(externalAddon => {
-      let satisfies = false;
-      if (externalAddon.kurlVersionCompatibilityRange) {
-        satisfies = semver.satisfies(kurlVersion, externalAddon.kurlVersionCompatibilityRange, {includePrerelease: true, loose: true});
+      if (externalAddon.isPrerelease) {
+        return;
       }
-      if (satisfies) {
-        if(!(externalAddonName in addons)) {
-          addons[externalAddonName] = [];
+      if (externalAddon.kurlVersionCompatibilityRange) {
+        const satisfies = semver.satisfies(kurlVersion, externalAddon.kurlVersionCompatibilityRange, {includePrerelease: true, loose: true});
+        if (satisfies) {
+          if(!(externalAddonName in addons)) {
+            addons[externalAddonName] = [];
+          }
+          addons[externalAddonName].push(externalAddon.version);
         }
-        addons[externalAddonName].push(externalAddon.version);
       }
     });
   });
