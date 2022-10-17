@@ -14,7 +14,7 @@ describe("mergeAddonVersions", () => {
         { version: "1.86.0", kurlVersionCompatibilityRange: ">= v2022.09.19-2" },
         { version: "1.85.0", kurlVersionCompatibilityRange: ">= v2022.09.19-1" },
         { version: "1.84.0", kurlVersionCompatibilityRange: ">= v2022.09.19-0", isPrerelease: false },
-        { version: "1.83.0", kurlVersionCompatibilityRange: ">= v2022.09.18-0", isPrerelease: true },
+        { version: "1.83.2", kurlVersionCompatibilityRange: ">= v2022.09.18-0", isPrerelease: true },
       ]
     }
     expect(mergeAddonVersions(internalAddonVersions, externalAddonVersions, "v2022.09.18-0")["another"]).to.deep.equal(["1.1.0", "1.0.0"]);
