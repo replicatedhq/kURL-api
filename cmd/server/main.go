@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
@@ -31,7 +32,10 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/replicatedhq/kurl/kurlkinds/pkg/apis/cluster/v1beta1"
+	"github.com/replicatedhq/kurl/kurlkinds/pkg/lint"
 	"golang.org/x/net/publicsuffix"
+	"gopkg.in/yaml.v2"
 )
 
 const upstream = "http://localhost:3000"
@@ -61,8 +65,9 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
-	r.PathPrefix("/").Handler(proxy)
+	r.PathPrefix("/").Handler(&RequestIntercepter{proxy})
 
 	http.Handle("/", r)
 
@@ -114,6 +119,69 @@ func init() {
 		panic(errors.Wrapf(err, "failed to create image policy context"))
 	}
 	policyContextInsecureAcceptAnything = pc
+}
+
+// RequestIntercepter wraps an http handler and allows for handler hijack. this is a composition
+// of another http.Handler and it is used here as a wrapper for a go reverse proxy struct.
+type RequestIntercepter struct {
+	http.Handler
+}
+
+// ServeHTTP for the RequestIntercepter verifies if the request ia a post of an Installer object
+// and applies the linter before calling the underlying handler. if any error is found during
+// lint the connection ends here.
+func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	setCors := func() {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	}
+
+	// we only care about posts of installer objects.
+	if r.Method != http.MethodPost || r.URL.Path != "/installer" {
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
+	body := bytes.NewBuffer(nil)
+	preserved := bytes.NewBuffer(nil)
+	mwriter := io.MultiWriter(body, preserved)
+	if _, err := io.Copy(mwriter, r.Body); err != nil {
+		setCors()
+		log.Printf("error copying request body: %s", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	var installer v1beta1.Installer
+	if err := yaml.NewDecoder(body).Decode(&installer); err != nil {
+		setCors()
+		log.Printf("unable to decode request body into an installer object: %s", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	result, err := lint.New().Validate(r.Context(), installer)
+	if err != nil {
+		setCors()
+		log.Printf("unexpected error linting installer: %s", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if len(result) == 0 {
+		// linter has returned no issue, restore the original request body
+		// and move on to the underlying handler.
+		r.Body = io.NopCloser(preserved)
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
+	setCors()
+	w.WriteHeader(http.StatusBadRequest)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("unable to encode lint result: %s", err)
+	}
 }
 
 func bundle(w http.ResponseWriter, r *http.Request) {
