@@ -67,7 +67,8 @@ func main() {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
-	r.PathPrefix("/").Handler(&RequestIntercepter{proxy})
+	r.PathPrefix("/installer"). Methods("POST").Handler(&RequestIntercepter{proxy})
+	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
 
