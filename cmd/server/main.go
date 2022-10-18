@@ -171,7 +171,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	if len(result) == 0 {
 		// linter has returned no issue, restore the original request body
 		// and move on to the underlying handler.
-		r.Body = io.NopCloser(preserved)
+		r.Body = io.NopCloser(bytes.NewReader(body))
 		ri.Handler.ServeHTTP(w, r)
 		return
 	}
