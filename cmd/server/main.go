@@ -67,7 +67,7 @@ func main() {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
-	r.PathPrefix("/installer"). Methods("POST").Handler(&RequestIntercepter{proxy})
+	r.PathPrefix("/installer").Methods("POST").Handler(&RequestIntercepter{proxy})
 	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
@@ -138,12 +138,6 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	}
 
-	// we only care about posts of installer objects.
-	if r.Method != http.MethodPost || r.URL.Path != "/installer" {
-		ri.Handler.ServeHTTP(w, r)
-		return
-	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		setCors()
@@ -153,7 +147,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var installer v1beta1.Installer
-	if err := yaml.NewDecoder(body).Decode(&installer); err != nil {
+	if err := yaml.Unmarshal(body, &installer); err != nil {
 		setCors()
 		log.Printf("unable to decode request body into an installer object: %s", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
