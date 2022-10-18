@@ -144,10 +144,8 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	body := bytes.NewBuffer(nil)
-	preserved := bytes.NewBuffer(nil)
-	mwriter := io.MultiWriter(body, preserved)
-	if _, err := io.Copy(mwriter, r.Body); err != nil {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
 		setCors()
 		log.Printf("error copying request body: %s", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
