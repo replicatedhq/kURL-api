@@ -38,6 +38,10 @@ spec:
     encryptNetwork: true
     podCidrRange: /12
     podCIDR: 39.1.2.3
+  flannel:
+    version: latest
+    podCIDRRange: /16
+    podCIDR: 172.19.0.0/16
   antrea:
     version: latest
     isEncryptionDisabled: true
@@ -1309,6 +1313,18 @@ spec:
         if (i.spec[config].version) {
           expect(i.spec[config].version).not.to.equal("latest", `expected ${config}.version to not equal 'latest'`);
         }
+      });
+    });
+  });
+
+  describe("flannel", () => {
+    it("should parse", async () => {
+      const i = await Installer.parse(everyOption).resolve(installerVersions, {});
+
+      expect(i.spec.flannel).to.deep.equal({
+        version: "0.20.0",
+        podCIDR: "172.19.0.0/16",
+        podCIDRRange: "/16",
       });
     });
   });
