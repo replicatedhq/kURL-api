@@ -155,7 +155,19 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	result, err := lint.New().Validate(r.Context(), installer)
+	linter := lint.New()
+	if os.Getenv("ENVIRONMENT") == "staging" {
+		u, err := url.Parse("https://staging.kurl.sh")
+		if err != nil {
+			setCors()
+			log.Printf("error parsing staging kurl.sh url: %s", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		linter = lint.New(lint.WithAPIBaseURL(u))
+	}
+
+	result, err := linter.Validate(r.Context(), installer)
 	if err != nil {
 		setCors()
 		log.Printf("unexpected error linting installer: %s", err)
