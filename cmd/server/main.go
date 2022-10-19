@@ -32,8 +32,8 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/kurlkinds/pkg/apis/cluster/v1beta1"
-	"github.com/replicatedhq/kurl/kurlkinds/pkg/lint"
+	"github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
+	"github.com/replicatedhq/kurlkinds/pkg/lint"
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/yaml.v2"
 )
@@ -145,6 +145,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close()
 
 	var installer v1beta1.Installer
 	if err := yaml.Unmarshal(body, &installer); err != nil {
@@ -163,8 +164,9 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if len(result) == 0 {
-		// linter has returned no issue, restore the original request body
-		// and move on to the underlying handler.
+		// linter has returned no issue, restore the original request body and move on to
+		// the underlying handler.
+		_ = r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewReader(body))
 		ri.Handler.ServeHTTP(w, r)
 		return
