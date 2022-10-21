@@ -139,8 +139,8 @@ export const weaveConfigSchema = {
   properties: {
     version: { type: "string" },
     s3Override: { type: "string", flag: "s3-override", description: "Override the download location for addon package distribution (used for CI/CD testing alpha addons)" },
-    podCIDR: { type: "string", flag: "pod-cidr", description: "The subnet where pods will be found" },
-    podCidrRange: { type: "string", flag: "pod-cidr-range", description: "The size of the CIDR where pods can be found" },
+    podCIDR: { type: "string", flag: "pod-cidr", description: "The subnet used by Pods" },
+    podCidrRange: { type: "string", flag: "pod-cidr-range", description: "The size of the subnet used by Pods" },
     isEncryptionDisabled: { type: "boolean", flag: "disable-weave-encryption", description: "Is encryption in the Weave CNI disabled" },
   },
   required: [ "version" ],
@@ -160,9 +160,28 @@ export const antreaConfigSchema = {
   properties: {
     version: { type: "string" },
     s3Override: { type: "string", description: "Override the download location for addon package distribution (used for CI/CD testing alpha addons)" },
-    podCIDR: { type: "string", description: "The subnet where pods will be found" },
-    podCidrRange: { type: "string", description: "The size of the CIDR where pods can be found" },
+    podCIDR: { type: "string", description: "The subnet used by Pods" },
+    podCidrRange: { type: "string", description: "The size of the subnet used by Pods" },
     isEncryptionDisabled: { type: "boolean", description: "Disable encryption between nodes" },
+  },
+  required: [ "version" ],
+  additionalProperites: false,
+};
+
+export interface FlannelConfig {
+  version: string;
+  s3Override?: string;
+  podCIDR?: string;
+  podCIDRRange?: string;
+}
+
+export const flannelConfigSchema = {
+  type: "object",
+  properties: {
+    version: { type: "string" },
+    s3Override: { type: "string", description: "Override the download location for addon package distribution (used for CI/CD testing alpha addons)" },
+    podCIDR: { type: "string", description: "The subnet used by Pods" },
+    podCIDRRange: { type: "string", description: "The size of the subnet used by Pods" },
   },
   required: [ "version" ],
   additionalProperites: false,
@@ -737,6 +756,7 @@ export interface InstallerSpec {
   k3s?: K3SConfig;
   docker?: DockerConfig;
   weave?: WeaveConfig;
+  flannel?: FlannelConfig;
   antrea?: AntreaConfig;
   calico?: CalicoConfig;
   rook?: RookConfig;
@@ -774,6 +794,7 @@ const specSchema = {
     k3s: k3sConfigSchema,
     docker: dockerConfigSchema,
     weave: weaveConfigSchema,
+    flannel: flannelConfigSchema,
     antrea: antreaConfigSchema,
     calico: calicoConfigSchema,
     rook: rookConfigSchema,
@@ -1281,6 +1302,12 @@ export class Installer {
     }
     if (this.spec.weave && this.spec.weave.podCidrRange && !Installer.isValidCidrRange(this.spec.weave.podCidrRange)) {
       return {error: {message: `Weave podCidrRange "${_.escape(this.spec.weave.podCidrRange)}" is invalid`}};
+    }
+    if (this.spec.flannel && !(await Installer.hasVersion(installerVersions, "flannel", this.spec.flannel.version)) && !this.hasS3Override("flannel")) {
+      return {error: {message: `Flannel version "${_.escape(this.spec.flannel.version)}" is not supported`}};
+    }
+    if (this.spec.flannel && this.spec.flannel.podCIDRRange && !Installer.isValidCidrRange(this.spec.flannel.podCIDRRange)) {
+      return {error: {message: `Flannel podCIDRRange "${_.escape(this.spec.flannel.podCIDRRange)}" is invalid`}};
     }
     if (this.spec.antrea && !(await Installer.hasVersion(installerVersions, "antrea", this.spec.antrea.version)) && !this.hasS3Override("antrea")) {
       return {error: {message: `Antrea version "${_.escape(this.spec.antrea.version)}" is not supported`}};

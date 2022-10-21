@@ -39,6 +39,7 @@ export const installerVersions: IInstallerVersions = {
     '0.2.4',  '0.2.3',  '0.2.1',  '0.2.0',
     '0.1.0'
   ],
+  flannel: [ '0.20.0' ],
   fluentd: [ '1.7.4' ],
   goldpinger: [
     '3.5.1-5.2.0',
