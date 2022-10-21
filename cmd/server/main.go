@@ -66,8 +66,9 @@ func main() {
 		log.Panic(err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
-	r.PathPrefix("/installer").Methods("POST").Handler(&RequestIntercepter{proxy})
-	r.PathPrefix("/installer/validate").Methods("POST").Handler(&RequestIntercepter{proxy})
+	intercepter := &RequestIntercepter{proxy}
+	r.PathPrefix("/installer").Methods("POST").Handler(intercepter)
+	r.PathPrefix("/installer/validate").Methods("POST").Handler(intercepter)
 	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
@@ -184,10 +185,16 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// XXX to keep this backward compatible we only return the first error, using the
-	// same format used by the typescript backend. we have more than one system using
-	// this endpoint: kurl.sh, vandoor are two of them.
-	output := map[string]map[string]string{"error": {"message": result[0].Message}}
+	// XXX we keep this very similar to what is returned by the typescript backend, a
+	// property "message" contains only one error message while the "messages" property
+	// contains all the error messages (including the one present in the "message" prop).
+	//we have more than one system using this endpoint: kurl.sh, vandoor are two of them.
+	output := map[string]map[string]interface{}{
+		"error": {
+			"message":  result[0].Message,
+			"messages": result,
+		},
+	}
 
 	setCors()
 	w.WriteHeader(http.StatusBadRequest)
