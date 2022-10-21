@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
@@ -31,7 +32,10 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
+	"github.com/replicatedhq/kurlkinds/pkg/lint"
 	"golang.org/x/net/publicsuffix"
+	"gopkg.in/yaml.v2"
 )
 
 const upstream = "http://localhost:3000"
@@ -62,6 +66,8 @@ func main() {
 		log.Panic(err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
+	r.PathPrefix("/installer").Methods("POST").Handler(&RequestIntercepter{proxy})
+	r.PathPrefix("/installer/validate").Methods("POST").Handler(&RequestIntercepter{proxy})
 	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
@@ -114,6 +120,80 @@ func init() {
 		panic(errors.Wrapf(err, "failed to create image policy context"))
 	}
 	policyContextInsecureAcceptAnything = pc
+}
+
+// RequestIntercepter wraps an http handler and allows for handler hijack. this is a composition
+// of another http.Handler and it is used here as a wrapper for a go reverse proxy struct.
+type RequestIntercepter struct {
+	http.Handler
+}
+
+// ServeHTTP for the RequestIntercepter verifies if the request ia a post of an Installer object
+// and applies the linter before calling the underlying handler. if any error is found during
+// lint the connection ends here.
+func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	setCors := func() {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		setCors()
+		log.Printf("error copying request body: %s", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	var installer v1beta1.Installer
+	if err := yaml.Unmarshal(body, &installer); err != nil {
+		setCors()
+		log.Printf("unable to decode request body into an installer object: %s", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	linter := lint.New()
+	if os.Getenv("ENVIRONMENT") == "staging" {
+		u, err := url.Parse("https://staging.kurl.sh")
+		if err != nil {
+			setCors()
+			log.Printf("error parsing staging kurl.sh url: %s", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		linter = lint.New(lint.WithAPIBaseURL(u))
+	}
+
+	result, err := linter.Validate(r.Context(), installer)
+	if err != nil {
+		setCors()
+		log.Printf("unexpected error linting installer: %s", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if len(result) == 0 {
+		// linter has returned no issue, restore the original request body and move on to
+		// the underlying handler.
+		_ = r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewReader(body))
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
+	// XXX to keep this backward compatible we only return the first error, using the
+	// same format used by the typescript backend. we have more than one system using
+	// this endpoint: kurl.sh, vandoor are two of them.
+	output := map[string]map[string]string{"error": {"message": result[0].Message}}
+
+	setCors()
+	w.WriteHeader(http.StatusBadRequest)
+	if err := json.NewEncoder(w).Encode(output); err != nil {
+		log.Printf("unable to encode lint result: %s", err)
+	}
 }
 
 func bundle(w http.ResponseWriter, r *http.Request) {
