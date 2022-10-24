@@ -7,7 +7,7 @@ require (
 	github.com/containers/image/v5 v5.22.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.0.0-20220907135653-1e95f45603a7
 )
 
