@@ -704,8 +704,8 @@ github.com/prometheus/procfs v0.8.0 h1:ODq8ZFEaYeCaZOJlZZdJA2AbQR98dSHSM1KW/You5
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 h1:MkV+77GLUNo5oJ0jf870itWm3D0Sjh7+Za9gazKc5LQ=
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
-github.com/replicatedhq/kurlkinds v1.0.2 h1:Y9T9oqiAdwnHCFzw1cOIMXk5I2kxticDG0a8UhqBd0U=
-github.com/replicatedhq/kurlkinds v1.0.2/go.mod h1:CNPiIjPbnWepSeGU9CZ5Rkmy20LjGwXfdRZN2ug006o=
+github.com/replicatedhq/kurlkinds v1.0.3 h1:66dpsoTioKzkK3pDJGbKT2esgrisWkU2ZvW0nPNB0ks=
+github.com/replicatedhq/kurlkinds v1.0.3/go.mod h1:CNPiIjPbnWepSeGU9CZ5Rkmy20LjGwXfdRZN2ug006o=
 github.com/replicatedhq/troubleshoot v0.45.0 h1:2NLxS1lF+BiWp0ZX5xfO7QIa5s11jqg26KmnkslHQBA=
 github.com/replicatedhq/troubleshoot v0.45.0/go.mod h1:UZCIFCTdFcse48cs0bSGktZm/LJtM2DEGX2ot1LErFE=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=

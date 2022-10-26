@@ -7,10 +7,9 @@ require (
 	github.com/containers/image/v5 v5.23.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurlkinds v1.0.2
+	github.com/replicatedhq/kurlkinds v1.0.3
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.0.0-20221002022538-bcab6841153b
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -101,6 +100,7 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.25.3 // indirect
 	k8s.io/apimachinery v0.25.3 // indirect

@@ -32,10 +32,8 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
 	"github.com/replicatedhq/kurlkinds/pkg/lint"
 	"golang.org/x/net/publicsuffix"
-	"gopkg.in/yaml.v2"
 )
 
 const upstream = "http://localhost:3000"
@@ -132,8 +130,7 @@ type RequestIntercepter struct {
 // and applies the linter before calling the underlying handler. if any error is found during
 // lint the connection ends here.
 func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	skipval := r.URL.Query().Get("skipValidation") == "true"
-	if skipval && r.Method == http.MethodPut {
+	if r.URL.Query().Get("skipValidation") == "true" {
 		ri.Handler.ServeHTTP(w, r)
 		return
 	}
@@ -147,37 +144,32 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		setCors()
-		log.Printf("error copying request body: %s", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		message := fmt.Sprintf("error copying request body: %s", err)
+		log.Printf(message)
+		http.Error(w, message, http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
-
-	var installer v1beta1.Installer
-	if err := yaml.Unmarshal(body, &installer); err != nil {
-		setCors()
-		log.Printf("unable to decode request body into an installer object: %s", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
 
 	linter := lint.New()
 	if os.Getenv("ENVIRONMENT") == "staging" {
 		u, err := url.Parse("https://staging.kurl.sh")
 		if err != nil {
 			setCors()
-			log.Printf("error parsing staging kurl.sh url: %s", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			message := fmt.Sprintf("error parsing staging kurl.sh url: %s", err)
+			log.Printf(message)
+			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
 		linter = lint.New(lint.WithAPIBaseURL(u))
 	}
 
-	result, err := linter.Validate(r.Context(), installer)
+	result, err := linter.ValidateMarshaledYAML(r.Context(), string(body))
 	if err != nil {
 		setCors()
-		log.Printf("unexpected error linting installer: %s", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		message := fmt.Sprintf("unexpected error linting installer: %s", err)
+		log.Printf(message)
+		http.Error(w, message, http.StatusInternalServerError)
 		return
 	}
 
@@ -193,7 +185,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	// XXX we keep this very similar to what is returned by the typescript backend, a
 	// property "message" contains only one error message while the "messages" property
 	// contains all the error messages (including the one present in the "message" prop).
-	//we have more than one system using this endpoint: kurl.sh, vandoor are two of them.
+	// we have more than one system using this endpoint: kurl.sh, vandoor are two of them.
 	output := map[string]map[string]interface{}{
 		"error": {
 			"message":  result[0].Message,
