@@ -67,8 +67,7 @@ func main() {
 	}
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
 	intercepter := &RequestIntercepter{proxy}
-	r.PathPrefix("/installer").Methods("POST").Handler(intercepter)
-	r.PathPrefix("/installer/validate").Methods("POST").Handler(intercepter)
+	r.PathPrefix("/installer").Methods(http.MethodPost, http.MethodPut).Handler(intercepter)
 	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
@@ -133,6 +132,12 @@ type RequestIntercepter struct {
 // and applies the linter before calling the underlying handler. if any error is found during
 // lint the connection ends here.
 func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	skipval := r.URL.Query().Get("skipValidation") == "true"
+	if skipval && r.Method == http.MethodPut {
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
 	setCors := func() {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE")
@@ -197,6 +202,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	setCors()
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(output); err != nil {
 		log.Printf("unable to encode lint result: %s", err)
