@@ -141,12 +141,16 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	}
 
+	internalError := func(message string, err error) {
+		setCors()
+		message = fmt.Sprintf("%s: %s", message, err)
+		log.Print(message)
+		http.Error(w, message, http.StatusInternalServerError)
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		setCors()
-		message := fmt.Sprintf("error copying request body: %s", err)
-		log.Printf(message)
-		http.Error(w, message, http.StatusInternalServerError)
+		internalError("error copying request body", err)
 		return
 	}
 	defer r.Body.Close()
@@ -155,10 +159,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	if os.Getenv("ENVIRONMENT") == "staging" {
 		u, err := url.Parse("https://staging.kurl.sh")
 		if err != nil {
-			setCors()
-			message := fmt.Sprintf("error parsing staging kurl.sh url: %s", err)
-			log.Printf(message)
-			http.Error(w, message, http.StatusInternalServerError)
+			internalError("error parsing staging kurl.sh url", err)
 			return
 		}
 		linter = lint.New(lint.WithAPIBaseURL(u))
@@ -166,10 +167,7 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	result, err := linter.ValidateMarshaledYAML(r.Context(), string(body))
 	if err != nil {
-		setCors()
-		message := fmt.Sprintf("unexpected error linting installer: %s", err)
-		log.Printf(message)
-		http.Error(w, message, http.StatusInternalServerError)
+		internalError("unexpected error linting installer", err)
 		return
 	}
 
