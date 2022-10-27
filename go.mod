@@ -7,9 +7,9 @@ require (
 	github.com/containers/image/v5 v5.23.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurlkinds v1.0.3
+	github.com/replicatedhq/kurlkinds v1.0.4
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/net v0.0.0-20221002022538-bcab6841153b
+	golang.org/x/net v0.1.0
 )
 
 require (
@@ -92,9 +92,9 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20220720214146-176da50484ac // indirect
 	google.golang.org/grpc v1.49.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
