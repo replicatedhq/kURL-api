@@ -180,10 +180,10 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// XXX we keep this very similar to what is returned by the typescript backend, a
+	// XXX we keep this very similar to what is returned by the typescript backend. A
 	// property "message" contains only one error message while the "messages" property
 	// contains all the error messages (including the one present in the "message" prop).
-	// we have more than one system using this endpoint: kurl.sh, vandoor are two of them.
+	// we have more than one system using this endpoint: kurl.sh and vandoor are two of them.
 	output := map[string]map[string]interface{}{
 		"error": {
 			"message":  result[0].Message,
@@ -191,8 +191,12 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
+	// XXX even though we return json, we set the content-type to text/yaml. We are doing
+	// this to keep consistency with what the typescript backend does. It also returns a
+	// json but sets the content-type to 'text/yaml'.
+	w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
+
 	setCors()
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(output); err != nil {
 		log.Printf("unable to encode lint result: %s", err)
