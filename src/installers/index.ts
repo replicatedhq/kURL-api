@@ -1397,7 +1397,7 @@ export class Installer {
     // Containerd 1.6 is incompatible with Weave
     if (this.spec.containerd && this.spec.containerd.version === "1.6.4") {
       if (this.spec.weave) {
-        return {error: {message: "Containerd 1.6.x is not compatible with Weave"}};
+        return {error: {message: `Containerd ${this.spec.containerd.version} is not compatible with Weave`}};
       }
     }
 
