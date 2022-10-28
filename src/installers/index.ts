@@ -1273,7 +1273,7 @@ export class Installer {
       return {error: {message}};
     }
 
-    if (this.spec.kubernetes) {
+    if (this.spec.kubernetes && this.spec.kubernetes.version) {
       if (!(await Installer.hasVersion(installerVersions, "kubernetes", this.spec.kubernetes.version)) && !this.hasS3Override("kubernetes")) {
         return {error: {message: `Kubernetes version "${_.escape(this.spec.kubernetes.version)}" is not supported`}};
       }
@@ -1281,115 +1281,115 @@ export class Installer {
         return {error: {message: `Kubernetes serviceCidrRange "${_.escape(this.spec.kubernetes.serviceCidrRange)}" is invalid`}};
       }
     }
-    if (this.spec.rke2) {
+    if (this.spec.rke2 && this.spec.rke2.version) {
       if (!(await Installer.hasVersion(installerVersions, "rke2", this.spec.rke2.version)) && !this.hasS3Override("rke2")) {
         return {error: {message: `RKE2 version ${_.escape(this.spec.rke2.version)} is not supported`}};
       }
     }
-    if (this.spec.kubernetes && this.spec.rke2) {
+    if (this.spec.kubernetes && this.spec.kubernetes.version && this.spec.rke2 && this.spec.rke2.version) {
       return {error: {message: `This spec contains both kubeadm and rke2, please specifiy only one Kubernetes distribution`}};
     }
-    if (this.spec.k3s) {
+    if (this.spec.k3s && this.spec.k3s.version) {
       if (!(await Installer.hasVersion(installerVersions, "k3s", this.spec.k3s.version)) && !this.hasS3Override("k3s")) {
         return {error: {message: `K3S version ${_.escape(this.spec.k3s.version)} is not supported`}};
       }
     }
-    if (this.spec.kubernetes && this.spec.k3s) {
+    if (this.spec.kubernetes && this.spec.kubernetes.version && this.spec.k3s && this.spec.k3s.version) {
       return {error: {message: `This spec contains both kubeadm and k3s, please specifiy only one Kubernetes distribution`}};
     }
-    if (this.spec.weave && !(await Installer.hasVersion(installerVersions, "weave", this.spec.weave.version)) && !this.hasS3Override("weave")) {
+    if (this.spec.weave && this.spec.weave.version && !(await Installer.hasVersion(installerVersions, "weave", this.spec.weave.version)) && !this.hasS3Override("weave")) {
       return {error: {message: `Weave version "${_.escape(this.spec.weave.version)}" is not supported`}};
     }
-    if (this.spec.weave && this.spec.weave.podCidrRange && !Installer.isValidCidrRange(this.spec.weave.podCidrRange)) {
+    if (this.spec.weave && this.spec.weave.version && this.spec.weave.podCidrRange && !Installer.isValidCidrRange(this.spec.weave.podCidrRange)) {
       return {error: {message: `Weave podCidrRange "${_.escape(this.spec.weave.podCidrRange)}" is invalid`}};
     }
-    if (this.spec.flannel && !(await Installer.hasVersion(installerVersions, "flannel", this.spec.flannel.version)) && !this.hasS3Override("flannel")) {
+    if (this.spec.flannel && this.spec.flannel.version && !(await Installer.hasVersion(installerVersions, "flannel", this.spec.flannel.version)) && !this.hasS3Override("flannel")) {
       return {error: {message: `Flannel version "${_.escape(this.spec.flannel.version)}" is not supported`}};
     }
-    if (this.spec.flannel && this.spec.flannel.podCIDRRange && !Installer.isValidCidrRange(this.spec.flannel.podCIDRRange)) {
+    if (this.spec.flannel && this.spec.flannel.version && this.spec.flannel.podCIDRRange && !Installer.isValidCidrRange(this.spec.flannel.podCIDRRange)) {
       return {error: {message: `Flannel podCIDRRange "${_.escape(this.spec.flannel.podCIDRRange)}" is invalid`}};
     }
-    if (this.spec.antrea && !(await Installer.hasVersion(installerVersions, "antrea", this.spec.antrea.version)) && !this.hasS3Override("antrea")) {
+    if (this.spec.antrea && this.spec.antrea.version && !(await Installer.hasVersion(installerVersions, "antrea", this.spec.antrea.version)) && !this.hasS3Override("antrea")) {
       return {error: {message: `Antrea version "${_.escape(this.spec.antrea.version)}" is not supported`}};
     }
-    if (this.spec.antrea && this.spec.antrea.podCidrRange && !Installer.isValidCidrRange(this.spec.antrea.podCidrRange)) {
+    if (this.spec.antrea && this.spec.antrea.version && this.spec.antrea.podCidrRange && !Installer.isValidCidrRange(this.spec.antrea.podCidrRange)) {
       return {error: {message: `Antrea podCidrRange "${_.escape(this.spec.antrea.podCidrRange)}" is invalid`}};
     }
-    if (this.spec.rook && !(await Installer.hasVersion(installerVersions, "rook", this.spec.rook.version)) && !this.hasS3Override("rook")) {
+    if (this.spec.rook && this.spec.rook.version && !(await Installer.hasVersion(installerVersions, "rook", this.spec.rook.version)) && !this.hasS3Override("rook")) {
       return {error: {message: `Rook version "${_.escape(this.spec.rook.version)}" is not supported`}};
     }
-    if (this.spec.contour && !(await Installer.hasVersion(installerVersions, "contour", this.spec.contour.version)) && !this.hasS3Override("contour")) {
+    if (this.spec.contour && this.spec.contour.version && !(await Installer.hasVersion(installerVersions, "contour", this.spec.contour.version)) && !this.hasS3Override("contour")) {
       return {error: {message: `Contour version "${_.escape(this.spec.contour.version)}" is not supported`}};
     }
-    if (this.spec.registry && !(await Installer.hasVersion(installerVersions, "registry", this.spec.registry.version)) && !this.hasS3Override("registry")) {
+    if (this.spec.registry && this.spec.registry.version && !(await Installer.hasVersion(installerVersions, "registry", this.spec.registry.version)) && !this.hasS3Override("registry")) {
       return {error: {message: `Registry version "${_.escape(this.spec.registry.version)}" is not supported`}};
     }
-    if (this.spec.prometheus && !(await Installer.hasVersion(installerVersions, "prometheus", this.spec.prometheus.version)) && !this.hasS3Override("prometheus")) {
+    if (this.spec.prometheus && this.spec.prometheus.version && !(await Installer.hasVersion(installerVersions, "prometheus", this.spec.prometheus.version)) && !this.hasS3Override("prometheus")) {
       return {error: {message: `Prometheus version "${_.escape(this.spec.prometheus.version)}" is not supported`}};
     }
-    if (this.spec.fluentd && !(await Installer.hasVersion(installerVersions, "fluentd", this.spec.fluentd.version)) && !this.hasS3Override("fluentd")) {
+    if (this.spec.fluentd && this.spec.fluentd.version && !(await Installer.hasVersion(installerVersions, "fluentd", this.spec.fluentd.version)) && !this.hasS3Override("fluentd")) {
       return {error: {message: `Fluentd version "${_.escape(this.spec.fluentd.version)}" is not supported`}};
     }
-    if (this.spec.kotsadm) {
+    if (this.spec.kotsadm && this.spec.kotsadm.version) {
       if (!(await Installer.hasVersion(installerVersions, "kotsadm", this.spec.kotsadm.version)) && !this.hasS3Override("kotsadm")) {
         return {error: {message: `Kotsadm version "${_.escape(this.spec.kotsadm.version)}" is not supported`}};
       }
     }
-    if (this.spec.velero && !(await Installer.hasVersion(installerVersions, "velero", this.spec.velero.version)) && !this.hasS3Override("velero")) {
+    if (this.spec.velero && this.spec.velero.version && !(await Installer.hasVersion(installerVersions, "velero", this.spec.velero.version)) && !this.hasS3Override("velero")) {
       return {error: {message: `Velero version "${_.escape(this.spec.velero.version)}" is not supported`}};
     }
-    if (this.spec.openebs && !(await Installer.hasVersion(installerVersions, "openebs", this.spec.openebs.version)) && !this.hasS3Override("openebs")) {
+    if (this.spec.openebs && this.spec.openebs.version && !(await Installer.hasVersion(installerVersions, "openebs", this.spec.openebs.version)) && !this.hasS3Override("openebs")) {
       return {error: {message: `OpenEBS version "${_.escape(this.spec.openebs.version)}" is not supported`}};
     }
-    if (this.spec.openebs && (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.22.0") && semver.lt(this.spec.openebs.version, "2.12.9"))) {
+    if (this.spec.openebs && this.spec.openebs.version && (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.22.0") && semver.lt(this.spec.openebs.version, "2.12.9"))) {
       return {error: {message: `Openebs version "${_.escape(this.spec.openebs.version)}" is not compatible with Kubernetes versions 1.22+`}};
     }
-    if (this.spec.openebs && (this.spec.openebs.isCstorEnabled && semver.gte(this.spec.openebs.version, "2.12.9"))) {
+    if (this.spec.openebs && this.spec.openebs.version && (this.spec.openebs.isCstorEnabled && semver.gte(this.spec.openebs.version, "2.12.9"))) {
       return {error: {message: `Openebs version "${_.escape(this.spec.openebs.version)}" does not support cstor in kURL`}};
     }
-    if (this.spec.minio && !(await Installer.hasVersion(installerVersions, "minio", this.spec.minio.version)) && !this.hasS3Override("minio")) {
+    if (this.spec.minio && this.spec.minio.version && !(await Installer.hasVersion(installerVersions, "minio", this.spec.minio.version)) && !this.hasS3Override("minio")) {
       return {error: {message: `Minio version "${_.escape(this.spec.minio.version)}" is not supported`}};
     }
-    if (this.spec.ekco && !(await Installer.hasVersion(installerVersions, "ekco", this.spec.ekco.version)) && !this.hasS3Override("ekco")) {
+    if (this.spec.ekco && this.spec.ekco.version && !(await Installer.hasVersion(installerVersions, "ekco", this.spec.ekco.version)) && !this.hasS3Override("ekco")) {
       return {error: {message: `Ekco version "${_.escape(this.spec.ekco.version)}" is not supported`}};
     }
-    if (this.spec.containerd && !(await Installer.hasVersion(installerVersions, "containerd", this.spec.containerd.version)) && !this.hasS3Override("containerd")) {
+    if (this.spec.containerd && this.spec.containerd.version && !(await Installer.hasVersion(installerVersions, "containerd", this.spec.containerd.version)) && !this.hasS3Override("containerd")) {
       return {error: {message: `Containerd version "${_.escape(this.spec.containerd.version)}" is not supported`}};
     }
-    if (this.spec.containerd && this.spec.docker) {
+    if (this.spec.containerd && this.spec.containerd.version && this.spec.docker && this.spec.docker.version) {
       return {error: {message: `This spec contains both docker and containerd, please specifiy only one CRI`}};
     }
-    if (this.spec.docker && this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.24.0")) {
+    if (this.spec.docker && this.spec.docker.version && this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.24.0")) {
       return {error: {message: "Docker is not supported with Kubernetes versions 1.24+, please choose Containerd"}};
     }
-    if (this.spec.collectd && !(await Installer.hasVersion(installerVersions, "collectd", this.spec.collectd.version)) && !this.hasS3Override("collectd")) {
+    if (this.spec.collectd && this.spec.collectd.version && !(await Installer.hasVersion(installerVersions, "collectd", this.spec.collectd.version)) && !this.hasS3Override("collectd")) {
       return {error: {message: `Collectd version "${_.escape(this.spec.collectd.version)}" is not supported`}};
     }
-    if (this.spec.certManager && !(await Installer.hasVersion(installerVersions, "certManager", this.spec.certManager.version)) && !this.hasS3Override("certManager")) {
+    if (this.spec.certManager && this.spec.certManager.version && !(await Installer.hasVersion(installerVersions, "certManager", this.spec.certManager.version)) && !this.hasS3Override("certManager")) {
       return {error: {message: `CertManager version "${_.escape(this.spec.certManager.version)}" is not supported`}};
     }
-    if (this.spec.metricsServer && !(await Installer.hasVersion(installerVersions, "metricsServer", this.spec.metricsServer.version)) && !this.hasS3Override("metricsServer")) {
+    if (this.spec.metricsServer && this.spec.metricsServer.version && !(await Installer.hasVersion(installerVersions, "metricsServer", this.spec.metricsServer.version)) && !this.hasS3Override("metricsServer")) {
       return {error: {message: `MetricsServer version "${_.escape(this.spec.metricsServer.version)}" is not supported`}};
     }
-    if (this.spec.longhorn && !(await Installer.hasVersion(installerVersions, "longhorn", this.spec.longhorn.version)) && !this.hasS3Override("longhorn")) {
+    if (this.spec.longhorn && this.spec.longhorn.version && !(await Installer.hasVersion(installerVersions, "longhorn", this.spec.longhorn.version)) && !this.hasS3Override("longhorn")) {
       return {error: {message: `Longhorn version "${_.escape(this.spec.longhorn.version)}" is not supported`}};
     }
-    if (this.spec.sonobuoy && !(await Installer.hasVersion(installerVersions, "sonobuoy", this.spec.sonobuoy.version)) && !this.hasS3Override("sonobuoy")) {
+    if (this.spec.sonobuoy && this.spec.sonobuoy.version && !(await Installer.hasVersion(installerVersions, "sonobuoy", this.spec.sonobuoy.version)) && !this.hasS3Override("sonobuoy")) {
       return {error: {message: `Sonobuoy version "${_.escape(this.spec.sonobuoy.version)}" is not supported`}};
     }
-    if (this.spec.goldpinger && !(await Installer.hasVersion(installerVersions, "goldpinger", this.spec.goldpinger.version)) && !this.hasS3Override("goldpinger")) {
+    if (this.spec.goldpinger && this.spec.goldpinger.version && !(await Installer.hasVersion(installerVersions, "goldpinger", this.spec.goldpinger.version)) && !this.hasS3Override("goldpinger")) {
       return {error: {message: `Goldpinger version "${_.escape(this.spec.goldpinger.version)}" is not supported`}};
     }
 
     // Rook 1.0.4 is incompatible with Kubernetes 1.20+
-    if (this.spec.rook && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.1.0")) {
-      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.20.0")) {
+    if (this.spec.rook && this.spec.rook.version && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.1.0")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.20.0")) {
         return {error: {message: "Rook 1.0.4 is not compatible with Kubernetes 1.20+"}};
       }
     }
     // Rook < v1.9.10 is incompatible with Kubernetes 1.25+
-    if (this.spec.rook && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.9.10")) {
-      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+    if (this.spec.rook && this.spec.rook.version && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.9.10")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
         return {error: {message: "Rook versions less than or equal to 1.9.10 are not compatible with Kubernetes 1.25+"}};
       }
     }
@@ -1402,14 +1402,14 @@ export class Installer {
     }
 
     // Prometheus versions <= 0.49.0-17.1.3 are incompatible with Kubernetes 1.22+
-    if (this.spec.prometheus && semver.lte(this.spec.prometheus.version, "0.49.0")) {
-      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.22.0")) {
+    if (this.spec.prometheus && this.spec.prometheus.version && semver.lte(this.spec.prometheus.version, "0.49.0")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.22.0")) {
         return {error: {message: "Prometheus versions less than or equal to 0.49.0-17.1.3 are not compatible with Kubernetes 1.22+"}};
       }
     }
     // Prometheus versions <= 0.59.0 are incompatible with Kubernetes 1.25+
-    if (this.spec.prometheus && semver.lte(this.spec.prometheus.version, "0.59.0")) {
-      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+    if (this.spec.prometheus && this.spec.prometheus.version && semver.lte(this.spec.prometheus.version, "0.59.0")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
         return {error: {message: "Prometheus versions less than or equal to 0.59.0 are not compatible with Kubernetes 1.25+"}};
       }
     }
@@ -1426,8 +1426,8 @@ export class Installer {
     }
 
     // Longhorn < v1.4.0 is incompatible with Kubernetes 1.25+
-    if (this.spec.longhorn && this.spec.longhorn.version != "latest" && semver.lte(this.spec.longhorn.version, "1.4.0")) {
-      if (this.spec.kubernetes && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
+    if (this.spec.longhorn && this.spec.longhorn.version && this.spec.longhorn.version != "latest" && semver.lte(this.spec.longhorn.version, "1.4.0")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
         return {error: {message: "Longhorn versions less than or equal to 1.4.0 are not compatible with Kubernetes 1.25+"}};
       }
     }
