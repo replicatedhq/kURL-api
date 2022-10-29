@@ -25,6 +25,31 @@ describe("Resolve version", () => {
     expect(version).to.equal("1.0.4");
   });
 
+  it("resolves correct weave 2.6 version without .x", async () => {
+    const version = await Installer.resolveVersion(installerVersions, "weave", "2.6.5");
+    expect(version).to.equal("2.6.5");
+  });
+
+  it("resolves correct weave 2.6 version with .x", async () => {
+    const version = await Installer.resolveVersion(installerVersions, "weave", "2.6.x");
+    expect(version).to.equal("2.6.5-20220825");
+  });
+
+  it("resolves correct weave 2.8 version without .x", async () => {
+    const version = await Installer.resolveVersion(installerVersions, "weave", "2.8.1");
+    expect(version).to.equal("2.8.1");
+  });
+
+  it("resolves correct weave 2.8 version with .x", async () => {
+    const version = await Installer.resolveVersion(installerVersions, "weave", "2.8.x");
+    expect(version).to.equal("2.8.1-20220825");
+  });
+
+  it("resolves weave latest", async () => {
+    const version = await Installer.resolveVersion(installerVersions, "weave", "latest");
+    expect(version).to.equal("2.6.5-20220825");
+  });
+
 });
 
 describe("greatest", () => {
