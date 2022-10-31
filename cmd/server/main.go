@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
@@ -31,6 +32,7 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/replicatedhq/kurlkinds/pkg/lint"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -62,6 +64,8 @@ func main() {
 		log.Panic(err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(upstreamURL)
+	intercepter := &RequestIntercepter{proxy}
+	r.PathPrefix("/installer").Methods(http.MethodPost, http.MethodPut).Handler(intercepter)
 	r.PathPrefix("/").Handler(proxy)
 
 	http.Handle("/", r)
@@ -114,6 +118,89 @@ func init() {
 		panic(errors.Wrapf(err, "failed to create image policy context"))
 	}
 	policyContextInsecureAcceptAnything = pc
+}
+
+// RequestIntercepter wraps an http handler and allows for handler hijack. this is a composition
+// of another http.Handler and it is used here as a wrapper for a go reverse proxy struct.
+type RequestIntercepter struct {
+	http.Handler
+}
+
+// ServeHTTP for the RequestIntercepter verifies if the request ia a post of an Installer object
+// and applies the linter before calling the underlying handler. if any error is found during
+// lint the connection ends here.
+func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("skipValidation") == "true" {
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
+	setCors := func() {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	}
+
+	internalError := func(message string, err error) {
+		setCors()
+		message = fmt.Sprintf("%s: %s", message, err)
+		log.Print(message)
+		http.Error(w, message, http.StatusInternalServerError)
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		internalError("error copying request body", err)
+		return
+	}
+	defer r.Body.Close()
+
+	linter := lint.New()
+	if os.Getenv("ENVIRONMENT") == "staging" {
+		u, err := url.Parse("https://staging.kurl.sh")
+		if err != nil {
+			internalError("error parsing staging kurl.sh url", err)
+			return
+		}
+		linter = lint.New(lint.WithAPIBaseURL(u))
+	}
+
+	result, err := linter.ValidateMarshaledYAML(r.Context(), string(body))
+	if err != nil {
+		internalError("unexpected error linting installer", err)
+		return
+	}
+
+	if len(result) == 0 {
+		// linter has returned no issue, restore the original request body and move on to
+		// the underlying handler.
+		_ = r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewReader(body))
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
+	// XXX we keep this very similar to what is returned by the typescript backend. A
+	// property "message" contains only one error message while the "messages" property
+	// contains all the error messages (including the one present in the "message" prop).
+	// we have more than one system using this endpoint: kurl.sh and vandoor are two of them.
+	output := map[string]map[string]interface{}{
+		"error": {
+			"message":  result[0].Message,
+			"messages": result,
+		},
+	}
+
+	// XXX even though we return json, we set the content-type to text/yaml. We are doing
+	// this to keep consistency with what the typescript backend does. It also returns a
+	// json but sets the content-type to 'text/yaml'.
+	w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
+
+	setCors()
+	w.WriteHeader(http.StatusBadRequest)
+	if err := json.NewEncoder(w).Encode(output); err != nil {
+		log.Printf("unable to encode lint result: %s", err)
+	}
 }
 
 func bundle(w http.ResponseWriter, r *http.Request) {
