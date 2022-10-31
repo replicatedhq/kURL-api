@@ -1529,7 +1529,7 @@ export class Installer {
     let next = versions;
     if (addon in Installer.replaceVersions) {
       Object.keys(Installer.replaceVersions[addon]).forEach((k: string) => {
-        next = versions.map(function(version: string): string {
+        next = next.map(function(version: string): string {
           return version === k ? Installer.replaceVersions[addon][k] : version;
         });
       });
