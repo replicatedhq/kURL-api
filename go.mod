@@ -3,7 +3,7 @@ module github.com/replicatedhq/kurl-api
 go 1.19
 
 require (
-	github.com/bugsnag/bugsnag-go/v2 v2.1.2
+	github.com/bugsnag/bugsnag-go/v2 v2.2.0
 	github.com/containers/image/v5 v5.23.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
@@ -36,7 +36,6 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
