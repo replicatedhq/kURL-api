@@ -7,7 +7,7 @@
   "dependencies": {
     "@bugsnag/js": "^7.18.0",
     "@bugsnag/plugin-express": "^7.18.0",
-    "@tsed/common": "^6.133.0",
+    "@tsed/common": "^6.133.1",
     "@tsed/core": "^6.133.0",
     "@tsed/di": "^6.133.0",
     "@tsed/logger": "^6.3.2",
