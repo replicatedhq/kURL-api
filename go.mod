@@ -7,7 +7,7 @@ require (
 	github.com/containers/image/v5 v5.23.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurlkinds v1.0.4
+	github.com/replicatedhq/kurlkinds v1.0.6
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.1.0
 )

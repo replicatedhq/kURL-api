@@ -70,32 +70,6 @@ export const kubernetesConfigSchema = {
   additionalProperties: false,
 };
 
-export interface RKE2Config {
-  version: string;
-}
-
-export const rke2ConfigSchema = {
-  type: "object",
-  properties: {
-    version: { type: "string" },
-  },
-  required: [ "version" ],
-  additionalProperites: false,
-};
-
-export interface K3SConfig {
-  version: string;
-}
-
-export const k3sConfigSchema = {
-  type: "object",
-  properties: {
-    version: { type: "string" },
-  },
-  required: [ "version" ],
-  additionalProperites: false,
-};
-
 export interface DockerConfig {
   version: string;
   s3Override?: string;
@@ -752,8 +726,6 @@ export const awsSchema = {
 
 export interface InstallerSpec {
   kubernetes?: KubernetesConfig;
-  rke2?: RKE2Config;
-  k3s?: K3SConfig;
   docker?: DockerConfig;
   weave?: WeaveConfig;
   flannel?: FlannelConfig;
@@ -790,8 +762,6 @@ const specSchema = {
   properties: {
     // order here determines order in rendered yaml
     kubernetes: kubernetesConfigSchema,
-    rke2: rke2ConfigSchema,
-    k3s: k3sConfigSchema,
     docker: dockerConfigSchema,
     weave: weaveConfigSchema,
     flannel: flannelConfigSchema,
@@ -857,65 +827,6 @@ export class Installer {
     };
 
     return i;
-  }
-
-  public static k3s(installerVersions: IInstallerVersions): Installer {
-    const i = new Installer();
-
-    i.id = "k3s";
-    i.spec.k3s = { version: "v1.23.3+k3s1" };
-    i.spec.registry = { version: this.toDotXVersion(installerVersions.registry[0]) };
-    i.spec.kotsadm = {
-      version: this.toDotXVersion(installerVersions.kotsadm[0]),
-      uiBindPort: 30880,
-      disableS3: true,
-    };
-
-    return i;
-  }
-
-  public static rke2(installerVersions: IInstallerVersions): Installer {
-    const i = new Installer();
-
-    i.id = "rke2";
-    i.spec.rke2 = { version: "v1.22.6+rke2r1" };
-    i.spec.registry = { version: this.toDotXVersion(installerVersions.registry[0]) };
-    i.spec.kotsadm = {
-      version: this.toDotXVersion(installerVersions.kotsadm[0]),
-      uiBindPort: 30880,
-      disableS3: true,
-    };
-    i.spec.openebs = {
-      version: this.toDotXVersion(this.greatest(installerVersions.openebs)),
-      isLocalPVEnabled: true,
-      localPVStorageClassName: "default",
-      isCstorEnabled: false,
-    };
-
-    return i;
-  }
-
-  public static getK3sCompatibleAddons(): string[] {
-    return [
-      "kotsadm",
-      "minio",
-      "openebs",
-      "registry",
-      "rook",
-      "sonobuoy"
-    ];
-  }
-
-  public static getRke2CompatibleAddons(): string[] {
-    return [
-      "kotsadm",
-      "minio",
-      "openebs",
-      "velero",
-      "registry",
-      "rook",
-      "sonobuoy"
-    ];
   }
 
   // Return an ordered list of all addon fields in the spec.
@@ -1251,13 +1162,7 @@ export class Installer {
   }
 
   public async validate(installerVersions: IInstallerVersions): Promise<ErrorResponse | undefined> {
-    if (!this.spec ||
-      (
-        (!this.spec.kubernetes || !this.spec.kubernetes.version) &&
-        (!this.spec.rke2 || !this.spec.rke2.version) &&
-        (!this.spec.k3s || !this.spec.k3s.version)
-      )
-    ) {
+    if (!this.spec || !this.spec.kubernetes || !this.spec.kubernetes.version) {
       return {error: {message: "Kubernetes version is required"}};
     }
 
@@ -1280,22 +1185,6 @@ export class Installer {
       if (this.spec.kubernetes.serviceCidrRange && !Installer.isValidCidrRange(this.spec.kubernetes.serviceCidrRange)) {
         return {error: {message: `Kubernetes serviceCidrRange "${_.escape(this.spec.kubernetes.serviceCidrRange)}" is invalid`}};
       }
-    }
-    if (this.spec.rke2 && this.spec.rke2.version) {
-      if (!(await Installer.hasVersion(installerVersions, "rke2", this.spec.rke2.version)) && !this.hasS3Override("rke2")) {
-        return {error: {message: `RKE2 version ${_.escape(this.spec.rke2.version)} is not supported`}};
-      }
-    }
-    if (this.spec.kubernetes && this.spec.kubernetes.version && this.spec.rke2 && this.spec.rke2.version) {
-      return {error: {message: `This spec contains both kubeadm and rke2, please specifiy only one Kubernetes distribution`}};
-    }
-    if (this.spec.k3s && this.spec.k3s.version) {
-      if (!(await Installer.hasVersion(installerVersions, "k3s", this.spec.k3s.version)) && !this.hasS3Override("k3s")) {
-        return {error: {message: `K3S version ${_.escape(this.spec.k3s.version)} is not supported`}};
-      }
-    }
-    if (this.spec.kubernetes && this.spec.kubernetes.version && this.spec.k3s && this.spec.k3s.version) {
-      return {error: {message: `This spec contains both kubeadm and k3s, please specifiy only one Kubernetes distribution`}};
     }
     if (this.spec.weave && this.spec.weave.version && !(await Installer.hasVersion(installerVersions, "weave", this.spec.weave.version)) && !this.hasS3Override("weave")) {
       return {error: {message: `Weave version "${_.escape(this.spec.weave.version)}" is not supported`}};
@@ -1431,43 +1320,6 @@ export class Installer {
         return {error: {message: "Longhorn versions less than or equal to 1.4.0 are not compatible with Kubernetes 1.25+"}};
       }
     }
-
-    // K3s is only compatible with a subset of addons
-    if (this.spec.k3s && this.spec.k3s.version) {
-      const compatibleAddons = Installer.getK3sCompatibleAddons();
-      const incompatibleAddons: string[] = [];
-      _.each(specSchema.properties, (val, key) => {
-        if (key !== "k3s" && this.spec[key] && this.spec[key].version && !compatibleAddons.includes(key)) {
-          incompatibleAddons.push(key);
-        }
-      });
-      if (incompatibleAddons.length > 0) {
-        return {error: {message: `The following add-ons are not compatible with k3s: ${incompatibleAddons.join(", ")}`}};
-      }
-    }
-
-    // RKE2 is only compatible with a subset of addons
-    if (this.spec.rke2 && this.spec.rke2.version) {
-      const compatibleAddons = Installer.getRke2CompatibleAddons();
-      const incompatibleAddons: string[] = [];
-      _.each(specSchema.properties, (val, key) => {
-        if (key !== "rke2" && this.spec[key] && this.spec[key].version && !compatibleAddons.includes(key)) {
-          incompatibleAddons.push(key);
-        }
-      });
-      if (incompatibleAddons.length > 0) {
-        return {error: {message: `The following add-ons are not compatible with rke2: ${incompatibleAddons.join(", ")}`}};
-      }
-    }
-
-    // K3S and RKE2 can only use Nodeports 30000-32767
-    if ((this.spec.k3s && this.spec.k3s.version ) || (this.spec.rke2 && this.spec.rke2.version) ) {
-        if (this.spec.kotsadm && this.spec.kotsadm.version) {
-            if ( !this.spec.kotsadm.uiBindPort || 30000 > this.spec.kotsadm.uiBindPort || this.spec.kotsadm.uiBindPort > 32767) {
-                return {error: {message: `Nodeports for this distro must use a NodePort between 30000-32767`}};
-            }
-        }
-    }
   }
 
   public static generatePackageName(config: string, version: string): string {
@@ -1501,10 +1353,6 @@ export class Installer {
           if (step !== "0.0.0") {
             pkgs.push(`${config}-${step}`);
           }
-        } else if (config === "rke2") {
-          kubernetesVersion = version.replace(/^v?([^-+]+).*$/, '$1');
-        } else if (config === "k3s") {
-          kubernetesVersion = version.replace(/^v?([^-+]+).*$/, '$1');
         }
       }
     }));
@@ -1654,12 +1502,6 @@ export class InstallerStore {
   public async getInstaller(installerID: string, installerVersions: IInstallerVersions): Promise<Installer|undefined> {
     if (installerID === "latest") {
       return Installer.latest(installerVersions);
-    }
-    if (installerID === "k3s") {
-      return Installer.k3s(installerVersions);
-    }
-    if (installerID === "rke2") {
-      return Installer.rke2(installerVersions);
     }
 
     const q = "SELECT yaml, team_id FROM kurl_installer WHERE kurl_installer_id = ?";

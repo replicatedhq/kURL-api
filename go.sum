@@ -704,6 +704,8 @@ github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 h1:MkV+77GLUNo
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/replicatedhq/kurlkinds v1.0.4 h1:WZ3/XkfUiVAAwPChSu3RtSAwuyM1uCRbtAo18k7IMNI=
 github.com/replicatedhq/kurlkinds v1.0.4/go.mod h1:i5FPQzNXIW33jWGjHOQTXz4+UTAtZSs14AIcS7R6240=
+github.com/replicatedhq/kurlkinds v1.0.6 h1:4G+H0X2/UKg6KekzeX4NFUbUVNbsizTRVXYCMPFhXJo=
+github.com/replicatedhq/kurlkinds v1.0.6/go.mod h1:i5FPQzNXIW33jWGjHOQTXz4+UTAtZSs14AIcS7R6240=
 github.com/replicatedhq/troubleshoot v0.45.0 h1:2NLxS1lF+BiWp0ZX5xfO7QIa5s11jqg26KmnkslHQBA=
 github.com/replicatedhq/troubleshoot v0.45.0/go.mod h1:UZCIFCTdFcse48cs0bSGktZm/LJtM2DEGX2ot1LErFE=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
