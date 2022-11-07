@@ -130,6 +130,12 @@ type RequestIntercepter struct {
 // and applies the linter before calling the underlying handler. if any error is found during
 // lint the connection ends here.
 func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// avoids to run the new linter if it is not requested to.
+	if r.URL.Query().Get("austere") != "true" {
+		ri.Handler.ServeHTTP(w, r)
+		return
+	}
+
 	if r.URL.Query().Get("skipValidation") == "true" {
 		ri.Handler.ServeHTTP(w, r)
 		return
