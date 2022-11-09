@@ -28,7 +28,11 @@ async function kurlVersionHandler(distUrl: string) {
     if (!res.ok) {
       throw new Error(`failed to fetch versions file from url ${url} with status ${res.status}`);
     }
-    kurlVersion = (await res.text()).trim();
+    const kv = (await res.text()).trim();
+    if (kv !== kurlVersion) {
+      kurlVersion = kv;
+      logger.info(`Got kurl version ${kurlVersion}`);
+    }
   } catch (error) {
     logger.error(error, "failed to pull external addon registry");
   }
