@@ -41,11 +41,14 @@ const upstream = "http://localhost:3000"
 var activeStreams int64 = 0
 var version string
 
+var enableBugsnag = false
+
 func main() {
 	version = os.Getenv("VERSION")
 	log.Printf("Commit %s", version)
 
 	if bugsnagKey := os.Getenv("BUGSNAG_KEY"); bugsnagKey != "" {
+		enableBugsnag = true
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:       bugsnagKey,
 			ReleaseStage: os.Getenv("ENVIRONMENT"),
@@ -71,7 +74,11 @@ func main() {
 	http.Handle("/", r)
 
 	log.Println("Listening on :3001")
-	server := &http.Server{Addr: ":3001", Handler: bugsnag.Handler(nil)}
+	var handler http.Handler
+	if enableBugsnag {
+		handler = bugsnag.Handler(nil)
+	}
+	server := &http.Server{Addr: ":3001", Handler: handler}
 
 	exitMutex := sync.Mutex{}
 	go func() {
@@ -519,12 +526,14 @@ func pipeFile(dst *tar.Writer, fileName, destPath string) error {
 func handleHttpError(w http.ResponseWriter, r *http.Request, err error, code int) {
 	log.Println(err)
 	http.Error(w, http.StatusText(code), code)
-	bugsnag.Notify(err, r.Context())
+	if enableBugsnag {
+		bugsnag.Notify(err, r.Context())
+	}
 }
 
 func handleError(ctx context.Context, err error, archive *tar.Writer) {
 	log.Println(err)
-	if !errors.Is(err, syscall.EPIPE) && !errors.Is(err, syscall.ECONNRESET) {
+	if enableBugsnag && !errors.Is(err, syscall.EPIPE) && !errors.Is(err, syscall.ECONNRESET) {
 		bugsnag.Notify(err, ctx)
 	}
 

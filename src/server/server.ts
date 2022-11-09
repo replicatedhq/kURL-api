@@ -34,8 +34,7 @@ export class Server {
     this.app.getApp().enable("trust proxy"); // so we get the real ip from the ELB in amaazon
 
     const bugsnagMiddleware = Bugsnag.getPlugin("express");
-
-    if (bugsnagMiddleware) {
+    if (process.env["BUGSNAG_KEY"] && bugsnagMiddleware) {
       this.app.use(bugsnagMiddleware.requestHandler);
     }
 
@@ -50,7 +49,7 @@ export class Server {
 
     this.app.use(cors());
 
-    if (bugsnagMiddleware) {
+    if (process.env["BUGSNAG_KEY"] && bugsnagMiddleware) {
       this.app.use(bugsnagMiddleware.errorHandler);
     }
 

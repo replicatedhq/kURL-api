@@ -86,7 +86,9 @@ export class ErrorMiddleware {
     if (!(error instanceof HTTPError)) {
       // its an unhandled error so log it and then return a regular 500
       logger.error("Handling internal server error " + util.inspect(error));
-      Bugsnag.notify(error);
+      if (process.env["BUGSNAG_KEY"]) {
+        Bugsnag.notify(error);
+      }
       error = new ServerError();
     }
 

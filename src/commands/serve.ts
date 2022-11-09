@@ -33,12 +33,14 @@ export async function main(argv: any): Promise<void> {
     require("newrelic");
   }
 
-  Bugsnag.start({
-    apiKey: process.env["BUGSNAG_KEY"] || "",
-    releaseStage: process.env["NODE_ENV"],
-    plugins: [BugsnagPluginExpress],
-    appVersion: process.env["VERSION"],
-  });
+  if (process.env["BUGSNAG_KEY"]) {
+    Bugsnag.start({
+      apiKey: process.env["BUGSNAG_KEY"],
+      releaseStage: process.env["NODE_ENV"],
+      plugins: [BugsnagPluginExpress],
+      appVersion: process.env["VERSION"],
+    });
+  }
   await startExternalAddonPolling();
   await startKurlVersionPolling();
 
