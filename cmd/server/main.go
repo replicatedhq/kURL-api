@@ -30,7 +30,6 @@ import (
 	"github.com/containers/image/v5/signature"
 	"github.com/containers/image/v5/transports/alltransports"
 	"github.com/containers/image/v5/types"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kurlkinds/pkg/lint"
@@ -131,17 +130,13 @@ type RequestIntercepter struct {
 // and applies the linter before calling the underlying handler. if any error is found during
 // lint the connection ends here.
 func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	reqid := uuid.New().String()
-
 	// avoids to run the new linter if it is not requested to.
 	if r.URL.Query().Get("austere") != "true" {
-		log.Printf("%s austere linter skipped (austere != true)", reqid)
 		ri.Handler.ServeHTTP(w, r)
 		return
 	}
 
 	if r.URL.Query().Get("skipValidation") == "true" {
-		log.Printf("%s austere linter skipped (skipValidation == true)", reqid)
 		ri.Handler.ServeHTTP(w, r)
 		return
 	}
@@ -155,11 +150,10 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	internalError := func(message string, err error) {
 		setCors()
 		message = fmt.Sprintf("%s: %s", message, err)
-		log.Printf("%s %s", reqid, message)
+		log.Print(message)
 		http.Error(w, message, http.StatusInternalServerError)
 	}
 
-	log.Printf("%s running austere linter", reqid)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		internalError("error copying request body", err)
@@ -169,13 +163,12 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	linter := lint.New()
 	if os.Getenv("ENVIRONMENT") == "staging" {
-		log.Printf("%s austere linter using staging kurl environment", reqid)
 		u, err := url.Parse("https://staging.kurl.sh")
 		if err != nil {
 			internalError("error parsing staging kurl.sh url", err)
 			return
 		}
-		linter = lint.New(lint.WithAPIBaseURL(u), lint.WithDebug())
+		linter = lint.New(lint.WithAPIBaseURL(u))
 	}
 
 	result, err := linter.ValidateMarshaledYAML(r.Context(), string(body))
@@ -187,7 +180,6 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	if len(result) == 0 {
 		// linter has returned no issue, restore the original request body and move on to
 		// the underlying handler.
-		log.Printf("%s austere linter found no issues with installer, forwarding", reqid)
 		_ = r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewReader(body))
 		ri.Handler.ServeHTTP(w, r)
@@ -212,9 +204,8 @@ func (ri *RequestIntercepter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	setCors()
 	w.WriteHeader(http.StatusBadRequest)
-	log.Printf("%s austere linter found issues with installer", reqid)
 	if err := json.NewEncoder(w).Encode(output); err != nil {
-		log.Printf("%s unable to encode lint result: %s", reqid, err)
+		log.Printf("unable to encode lint result: %s", err)
 	}
 }
 
