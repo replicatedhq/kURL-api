@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/bugsnag/bugsnag-go/v2 v2.2.0
-	github.com/containers/image/v5 v5.23.0
+	github.com/containers/image/v5 v5.23.1
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.0.6
