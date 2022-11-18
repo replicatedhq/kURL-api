@@ -1,5 +1,6 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
+import * as _ from "lodash";
 import { Templates } from "../../util/services/templates";
 import { Installer, InstallerStore } from "../../installers";
 import { Installers } from "../../controllers/Scripts";
@@ -59,6 +60,8 @@ spec:
     version: latest
   metricsServer:
     version: latest
+  velero:
+    version: 1.9.x
 `;
 
 const installer = Installer.parse(yaml);
@@ -157,12 +160,16 @@ const installer = Installer.parse(yaml);
 
     const installerVersionsMock = sinon.mock(installerVersionsPkg);
     installerVersionsMock.expects("getInstallerVersions").withArgs("DIST_URL", "v0.0.0-0").returns(installerVersions);
-    installerVersionsMock.expects("getInstallerVersions").withArgs("DIST_URL", specInstallerVersion).returns(installerVersions);
+
+    const installerVersionsMissingLatestVelero = _.cloneDeep(installerVersions);
+    installerVersionsMissingLatestVelero.velero = _.filter(installerVersionsMissingLatestVelero.velero, (v) => v !== '1.9.1');
+    installerVersionsMock.expects("getInstallerVersions").withArgs("DIST_URL", specInstallerVersion).returns(installerVersionsMissingLatestVelero);
 
     const installersController = new Installers(installerStore, templates, metricsStore);
     const script = await installersController.getInstaller(res, req, installerID, "");
     expect(script).to.contain(`KURL_VERSION="${specInstallerVersion}"`)
     expect(script).to.contain(`kurl:\n    installerVersion: ${specInstallerVersion}\n    additionalNoProxyAddresses: []`);
+    expect(script).to.contain(`velero:\n    version: 1.9.0`);
 
     packageMock.verify();
     packageMock.restore();

@@ -96,7 +96,7 @@ export class Installers {
     i.id = i.hash();
 
     const externalVersions = getExternalAddonVersions();
-    const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
+    const err = i.resolve(installerVersions, externalVersions).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -197,7 +197,7 @@ export class Installers {
     }
     if (resolve) {
       const externalVersions = getExternalAddonVersions();
-      installer = await installer.resolve(installerVersions, externalVersions);
+      installer = installer.resolve(installerVersions, externalVersions);
     }
     if (installer.id === "latest") {
       installer.id = "";
@@ -241,7 +241,7 @@ export class Installers {
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     const externalVersions = getExternalAddonVersions();
-    const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
+    const err = i.resolve(installerVersions, externalVersions).validate(installerVersions);
     if (err) {
       response.status(400);
       return err;
@@ -301,7 +301,7 @@ export class Installers {
       const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
       const externalVersions = getExternalAddonVersions();
-      const err = await (await i.resolve(installerVersions, externalVersions)).validate(installerVersions);
+      const err = i.resolve(installerVersions, externalVersions).validate(installerVersions);
       if (err) {
         response.status(400);
         return err;

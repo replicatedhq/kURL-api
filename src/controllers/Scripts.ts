@@ -61,9 +61,11 @@ export class Installers {
     }
 
     const externalVersions = getExternalAddonVersions();
-    installer = await installer.resolve(installerVersions, externalVersions);
+
+    // resolve the correct version if specified in the spec
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+    installer = installer.resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -95,11 +97,11 @@ export class Installers {
     }
 
     const externalVersions = getExternalAddonVersions();
-    installer = await installer.resolve(installerVersions, externalVersions);
+
+    // resolve the correct version if specified in the spec
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
-
-    installer = await installer.resolve(installerVersions, externalVersions);
+    installer = installer.resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -125,9 +127,11 @@ export class Installers {
     }
 
     const externalVersions = getExternalAddonVersions();
-    installer = await installer.resolve(installerVersions, externalVersions);
+
+    // resolve the correct version if specified in the spec
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+    installer = installer.resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -145,7 +149,7 @@ export class Installers {
     const installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
     const externalVersions = getExternalAddonVersions();
-    const installer = await (Installer.latest(installerVersions)).resolve(installerVersions, externalVersions);
+    const installer = Installer.latest(installerVersions).resolve(installerVersions, externalVersions);
 
     response.set("X-Kurl-Hash", installer.hash());
     response.status(200);
@@ -181,9 +185,11 @@ export class Installers {
     }
 
     const externalVersions = getExternalAddonVersions();
-    installer = await installer.resolve(installerVersions, externalVersions);
+
+    // resolve the correct version if specified in the spec
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
+    installer = installer.resolve(installerVersions, externalVersions);
 
     try {
       await this.metricsStore.saveSaasScriptEvent({
