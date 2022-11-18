@@ -76,7 +76,7 @@ export class Bundle {
     }
 
     const externalVersions = getExternalAddonVersions();
-    installer = await installer.resolve(installerVersions, externalVersions);
+    installer = installer.resolve(installerVersions, externalVersions);
     kurlVersion = kurlVersionOrDefault(kvarg, installer);
     installerVersions = await getInstallerVersions(this.distURL, kurlVersion);
 
@@ -96,7 +96,7 @@ export class Bundle {
 
     const ret: BundleManifest = {layers: [], files: {}, images: []};
     const packageUrlPrefix = await getPackageUrlPrefix(this.distURL, kurlVersion);
-    ret.layers = (await installer.packages(installerVersions, kurlVersion)).map((pkg) => function (pkg: string) {
+    ret.layers = installer.packages(installerVersions, kurlVersion).map((pkg) => function (pkg: string) {
       if (pkg.startsWith("http")) { // if it starts with http, it's an s3override URL and should be used directly
         return pkg;
       }
