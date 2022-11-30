@@ -51,5 +51,3 @@ jobs:
       - uses: replicatedhq/action-install-pact@main
       - name: Verify provider
         run: make -C pact provider-verify
-
-        

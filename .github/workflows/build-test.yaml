@@ -44,4 +44,3 @@ jobs:
     uses: ./.github/workflows/pact-provider-verify.yaml
     with:
       PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: false
-

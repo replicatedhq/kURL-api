@@ -27,6 +27,3 @@ verify:
 .PHONY: verify-teardown
 verify-teardown:
 	docker compose down --remove-orphans
-
-tttt:
-	echo ${PACT_BROKER_TOKEN}
