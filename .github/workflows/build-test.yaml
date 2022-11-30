@@ -44,3 +44,6 @@ jobs:
     uses: ./.github/workflows/pact-provider-verify.yaml
     with:
       PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: false
+      PACT_BROKER_BASE_URL: https://replicated.pactflow.io
+      # read only token, safe
+      PACT_BROKER_TOKEN: W2y60iAYJbPuWSL_wsObzw
