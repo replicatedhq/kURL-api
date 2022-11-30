@@ -41,9 +41,7 @@ jobs:
     - run: echo "::notice ::build test success"
 
   pact-provider-verify:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     uses: ./.github/workflows/pact-provider-verify.yaml
-    secrets:
-      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
-      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+    with:
+      PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: false
 

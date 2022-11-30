@@ -15,6 +15,11 @@ on:
         description: Consumer version selector
         required: false
         default: '{"deployedOrReleased":true, "environment":"staging"}'
+      PACT_BROKER_PUBLISH_VERIFICATION_RESULTS:
+        type: boolean
+        description: Publish verification results to broker
+        required: false
+        default: true
     secrets:
       PACT_BROKER_BASE_URL:
         description: Base URL of pact broker
@@ -26,7 +31,7 @@ on:
 env:
   PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
   PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
-  PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: true
+  PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: ${{ github.event.client_payload && 'true' || inputs.PACT_BROKER_PUBLISH_VERIFICATION_RESULTS }}
   PACT_URL: ${{ github.event.client_payload.pact_url }}
   GIT_COMMIT: ${{ github.event.client_payload.sha }}
   GIT_BRANCH: ${{ github.event.client_payload.branch }}
