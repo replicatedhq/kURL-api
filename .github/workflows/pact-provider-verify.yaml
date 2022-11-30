@@ -1,0 +1,50 @@
+name: Pact provider verify
+
+on:
+  repository_dispatch:
+    types:
+      - contract_requiring_verification_published
+  workflow_call:
+    inputs:
+      PACT_URL:
+        type: string
+        description: URL of pact to verify
+        required: false
+      PACT_CONSUMER_VERSION_SELECTOR:
+        type: string
+        description: Consumer version selector
+        required: false
+        default: '{"deployedOrReleased":true, "environment":"staging"}'
+    secrets:
+      PACT_BROKER_BASE_URL:
+        description: Base URL of pact broker
+        required: true
+      PACT_BROKER_TOKEN:
+        description: Pact broker token
+        required: true
+
+env:
+  PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+  PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+  PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: true
+  PACT_URL: ${{ github.event.client_payload.pact_url }}
+  GIT_COMMIT: ${{ github.event.client_payload.sha }}
+  GIT_BRANCH: ${{ github.event.client_payload.branch }}
+  DESCRIPTION: ${{ github.event.client_payload.message }}
+
+jobs:
+  verify-contract:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ ! github.event.client_payload }}
+      - uses: actions/checkout@v3
+        if: ${{ github.event.client_payload }}
+        with:
+          ref: ${{env.GIT_COMMIT}}
+      - run: make fixtures
+      - uses: replicatedhq/action-install-pact@main
+      - name: Verify provider
+        run: make -C pact provider-verify
+
+        

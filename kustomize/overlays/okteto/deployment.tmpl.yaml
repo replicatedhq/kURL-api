@@ -18,7 +18,7 @@ spec:
         - name: NODE_ENV
           value: development
         - name: MYSQL_HOST
-          value: mysql
+          value: kurl-mysql
         - name: MYSQL_USER
           value: replicated
         - name: MYSQL_PASSWORD

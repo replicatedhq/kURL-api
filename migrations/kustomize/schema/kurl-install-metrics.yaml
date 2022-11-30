@@ -1,0 +1,63 @@
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: kurl-install-metrics
+spec:
+  database: replicated
+  name: kurl_install_metrics
+  schema:
+    mysql:
+      defaultCharset: latin1
+      primaryKey:
+      - id
+      columns:
+      - name: id
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: started_at
+        type: datetime
+        constraints:
+          notNull: true
+      - name: completed_at
+        type: datetime
+        constraints:
+          notNull: false
+      - name: failed_at
+        type: datetime
+        constraints:
+          notNull: false
+      - name: host_os
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: kernel_version
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: kurl_url
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: installer_id
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: testgrid_id
+        type: varchar (255)
+        constraints:
+          notNull: false
+      - name: cause
+        type: text
+        constraints:
+          notNull: false
+      - name: machine_id
+        type: varchar (255)
+        constraints:
+          notNull: true
+        default: ""
+      - name: is_upgrade
+        type: tinyint(1)
+        constraints:
+          notNull: false
+        default: "0"

@@ -1,9 +1,31 @@
-name: kurl
-command: bash
-image: okteto.dev/replicated-kurl:${OKTETO_NAMESPACE}
-workdir: /src
-sync:
-  - .:/src
-externalVolumes:
-  - dev-cache:npm-cache:/cache/.npm
-  - dev-cache:kurl-webpack-cache:/src/node_modules/.cache
+build:
+  kurl:
+    context: .
+    dockerfile: ./Dockerfile.okteto
+  kurl-migrations:
+    context: migrations
+    dockerfile: ./migrations/Dockerfile.okteto
+
+deploy:
+  - envsubst < kustomize/overlays/okteto/deployment.tmpl.yaml > kustomize/overlays/okteto/deployment.yaml
+  - cd kustomize/overlays/okteto && kustomize edit set image replicated/kurl=${OKTETO_BUILD_KURL_IMAGE}
+  - cd kustomize/overlays/okteto && kustomize edit set image kurl-migrations=${OKTETO_BUILD_KURL_MIGRATIONS_IMAGE}
+  - kubectl apply -k kustomize/overlays/okteto
+
+dev:
+  kurl:
+    command: bash
+    workdir: /src
+    sync:
+      - .:/src
+    volumes:
+      - /cache/.npm
+      - /src/node_modules/.cache
+  kurl-migrations:
+    command: bash
+    workdir: /src
+    sync:
+      - ./migrations:/src
+    volumes:
+      - /cache/.npm
+      - /src/node_modules/.cache

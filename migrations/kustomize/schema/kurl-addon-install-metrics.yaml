@@ -1,0 +1,39 @@
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: kurl-addon-install-metrics
+spec:
+  database: replicated
+  name: kurl_addon_install_metrics
+  schema:
+    mysql:
+      defaultCharset: latin1
+      primaryKey:
+      - id
+      - addon
+      columns:
+      - name: id
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: addon
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: version
+        type: varchar (255)
+        constraints:
+          notNull: false
+      - name: started_at
+        type: datetime
+        constraints:
+          notNull: true
+      - name: completed_at
+        type: datetime
+        constraints:
+          notNull: false
+      - name: failed_at
+        type: datetime
+        constraints:
+          notNull: false
+
