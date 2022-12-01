@@ -41,7 +41,7 @@ jobs:
     - run: echo "::notice ::build test success"
 
   pact-provider-verify:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ( github.event.pull_request.head.repo.full_name == github.repository ) && ( github.actor != 'dependabot[bot]' )
     uses: ./.github/workflows/pact-provider-verify.yaml
     with:
       PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: true
@@ -50,7 +50,7 @@ jobs:
       PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
 
   pact-provider-verify-fork:
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: ( github.event.pull_request.head.repo.full_name != github.repository ) || ( github.actor == 'dependabot[bot]' )
     uses: ./.github/workflows/pact-provider-verify.yaml
     with:
       PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: false
