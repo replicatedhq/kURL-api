@@ -48,3 +48,14 @@ jobs:
       PACT_BROKER_BASE_URL: https://replicated.pactflow.io
       # read only token, safe
       PACT_BROKER_TOKEN: W2y60iAYJbPuWSL_wsObzw
+  
+  pact-can-i-deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - pact-provider-verify
+    env:
+      PACT_RETRY_WHILE_UNKNOWN: '0'
+      PACT_BROKER_CAN_I_DEPLOY_DRY_RUN: 'true'
+    steps:
+      - uses: replicatedhq/action-install-pact@main
+      - run: make -C pact can-i-deploy

@@ -49,6 +49,22 @@ jobs:
     - run: |
         docker push 799720048698.dkr.ecr.us-east-1.amazonaws.com/kurl:${GITHUB_SHA:0:7}
 
+  staging-pact-provider-verify:
+    uses: ./.github/workflows/pact-provider-verify.yaml
+    with:
+      PACT_CONSUMER_VERSION_SELECTOR: '{"deployedOrReleased":true,"environment":"staging"}'
+    secrets:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+
+  production-pact-provider-verify:
+    uses: ./.github/workflows/pact-provider-verify.yaml
+    with:
+      PACT_CONSUMER_VERSION_SELECTOR: '{"deployedOrReleased":true,"environment":"production"}'
+    secrets:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+  
   deploy-staging-eks:
     environment: 
       name: staging
@@ -56,6 +72,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
     - staging-docker-image
+    - staging-pact-provider-verify
     steps:
     - uses: actions/checkout@v3
 
@@ -83,6 +100,13 @@ jobs:
         echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' \
           >> ~/.ssh/known_hosts
 
+    - name: install Pact
+      uses: replicatedhq/action-install-pact@main
+    - name: can-i-deploy
+      env: 
+        PACT_ENVIRONMENT: staging
+      run: make -C pact can-i-deploy
+
     - name: release
       run: |
         cd ~ && git clone --single-branch -b main git@github.com:replicatedcom/gitops-deploy
@@ -102,6 +126,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
     - production-docker-image
+    - production-pact-provider-verify
     steps:
     - uses: actions/checkout@v3
     - name: kustomize
@@ -127,6 +152,13 @@ jobs:
         chmod 400 ~/.ssh/id_rsa
         echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' \
           >> ~/.ssh/known_hosts
+
+    - name: install Pact
+      uses: replicatedhq/action-install-pact@main
+    - name: can-i-deploy
+      env: 
+        PACT_ENVIRONMENT: production
+      run: make -C pact can-i-deploy
 
     - name: release
       run: |
