@@ -67,5 +67,6 @@ jobs:
       PACT_RETRY_WHILE_UNKNOWN: '0'
       PACT_BROKER_CAN_I_DEPLOY_DRY_RUN: 'true'
     steps:
+      - uses: actions/checkout@v3
       - uses: replicatedhq/action-install-pact@main
       - run: make -C pact can-i-deploy
