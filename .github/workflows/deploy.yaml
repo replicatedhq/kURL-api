@@ -6,7 +6,6 @@ on:
     - main
 
 jobs:
-
   staging-docker-image:
     runs-on: ubuntu-20.04
     steps:
@@ -73,6 +72,9 @@ jobs:
     needs:
     - staging-docker-image
     - staging-pact-provider-verify
+    env: 
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
     steps:
     - uses: actions/checkout@v3
 
@@ -118,6 +120,11 @@ jobs:
         git add .
         git commit --allow-empty -m "https://github.com/replicatedhq/kurl-api/actions/runs/${GITHUB_RUN_ID}" && \
           git push origin main
+    
+    - name: record deployment
+      env:
+        PACT_ENVIRONMENT: staging
+      run: make -C pact record-deployment
 
   deploy-production-eks:
     environment: 
@@ -127,6 +134,9 @@ jobs:
     needs:
     - production-docker-image
     - production-pact-provider-verify
+    env: 
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
     steps:
     - uses: actions/checkout@v3
     - name: kustomize
@@ -171,3 +181,8 @@ jobs:
         git add .
         git commit --allow-empty -m "https://github.com/replicatedhq/kurl-api/actions/runs/${GITHUB_RUN_ID}" && \
           git push origin release
+
+    - name: record deployment
+      env:
+        PACT_ENVIRONMENT: staging
+      run: make -C pact record-deployment

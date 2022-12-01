@@ -37,3 +37,10 @@ can-i-deploy:
 	--to-environment $${PACT_ENVIRONMENT:-staging} \
 	--retry-while-unknown $${PACT_RETRY_WHILE_UNKNOWN:-30} \
 	--retry-interval $${PACT_RETRY_INTERVAL:-10}
+
+.PHONY: record-deployment
+record-deployment:
+	pact-broker record-deployment \
+	--pacticipant kurl-api \
+	--version ${GITHUB_SHA} \
+	--environment $${PACT_ENVIRONMENT:-staging}
