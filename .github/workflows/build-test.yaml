@@ -41,6 +41,16 @@ jobs:
     - run: echo "::notice ::build test success"
 
   pact-provider-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/pact-provider-verify.yaml
+    with:
+      PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: true
+    secrets:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+
+  pact-provider-verify-fork:
+    if: github.event.pull_request.head.repo.full_name != github.repository
     uses: ./.github/workflows/pact-provider-verify.yaml
     with:
       PACT_BROKER_PUBLISH_VERIFICATION_RESULTS: false
@@ -57,6 +67,5 @@ jobs:
       PACT_RETRY_WHILE_UNKNOWN: '0'
       PACT_BROKER_CAN_I_DEPLOY_DRY_RUN: 'true'
     steps:
-      - uses: actions/checkout@v3
       - uses: replicatedhq/action-install-pact@main
       - run: make -C pact can-i-deploy
