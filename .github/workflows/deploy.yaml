@@ -75,6 +75,7 @@ jobs:
     env: 
       PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
       PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      PACT_ENVIRONMENT: staging
     steps:
     - uses: actions/checkout@v3
 
@@ -105,8 +106,6 @@ jobs:
     - name: install Pact
       uses: replicatedhq/action-install-pact@main
     - name: can-i-deploy
-      env: 
-        PACT_ENVIRONMENT: staging
       run: make -C pact can-i-deploy
 
     - name: release
@@ -122,8 +121,6 @@ jobs:
           git push origin main
     
     - name: record deployment
-      env:
-        PACT_ENVIRONMENT: staging
       run: make -C pact record-deployment
 
   deploy-production-eks:
@@ -137,6 +134,7 @@ jobs:
     env: 
       PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
       PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      PACT_ENVIRONMENT: production
     steps:
     - uses: actions/checkout@v3
     - name: kustomize
@@ -166,8 +164,6 @@ jobs:
     - name: install Pact
       uses: replicatedhq/action-install-pact@main
     - name: can-i-deploy
-      env: 
-        PACT_ENVIRONMENT: production
       run: make -C pact can-i-deploy
 
     - name: release
@@ -183,6 +179,4 @@ jobs:
           git push origin release
 
     - name: record deployment
-      env:
-        PACT_ENVIRONMENT: staging
       run: make -C pact record-deployment
