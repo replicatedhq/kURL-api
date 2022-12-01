@@ -1,0 +1,5 @@
+resources:
+- ./kurl-addon-install-metrics.yaml
+- ./kurl-install-metrics.yaml
+- ./kurl-installer.yaml
+- ./kurl-saas-script-metrics.yaml

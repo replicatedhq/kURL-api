@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: ${FIXTURES_IMAGE:-repldev/kurl-fixtures}:${FIXTURES_TAG:-local}
+  kurl-api:
+    build:
+      context: ../
+      dockerfile: pact/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      TSED_SUPPRESS_ACCESSLOG: "1"
+      PINO_LOG_PRETTY: "1"
+      PINO_LOG_LEVEL: "debug"
+      NODE_ENV: "development"
+      MYSQL_HOST: mysql
+      MYSQL_USER: replicated
+      MYSQL_PASSWORD: password
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: replicated
+      JWT_SIGNING_KEY: "jwt-signing-key"
+      KURL_URL: "http://localhost:3000"
+      KURL_BUCKET: "kurl-sh"
+      DIST_URL: "https://kurl-sh.s3.amazonaws.com/staging"
+    command: ./wait-for mysql:3306 -- node --no-deprecation build/bin/kurl serve

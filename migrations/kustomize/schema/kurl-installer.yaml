@@ -1,0 +1,25 @@
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: kurl-installer
+spec:
+  database: replicated
+  name: kurl_installer
+  schema:
+    mysql:
+      defaultCharset: utf8
+      primaryKey:
+      - kurl_installer_id
+      columns:
+      - name: kurl_installer_id
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: yaml
+        type: mediumtext
+        constraints:
+          notNull: true
+      - name: team_id
+        type: char (36)
+        constraints:
+          notNull: false

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kurl-migrations
+  labels:
+    app: kurl-migrations
+spec:
+  selector:
+    matchLabels:
+      app: kurl-migrations
+  template:
+    metadata:
+      labels:
+        app: kurl-migrations
+    spec:
+      volumes:
+        - name: migrations
+          emptyDir:
+            medium: Memory
+      containers:
+      - image: kurl-migrations
+        name: pause
+        command:
+          - sleep
+          - infinity
+        volumeMounts:
+          - name: migrations
+            mountPath: /migrations
+        env:
+          - name: SCHEMAHERO_DRIVER
+            value: mysql
+          - name: SCHEMAHERO_SPEC_FILE
+            value: /go/src/github.com/replicatedhq/kurl-api/migrations/kustomize/schema
+          - name: SCHEMAHERO_OUT
+            value: /migrations/plan.yaml
+          - name: SCHEMAHERO_DDL
+            value: /migrations/plan.yaml
+          - name: SCHEMAHERO_URI
+            value: replicated:password@tcp(kurl-mysql:3306)/replicated?tls=false
+      initContainers:
+      - image: kurl-migrations
+        name: migrations-plan
+        volumeMounts:
+          - name: migrations
+            mountPath: /migrations
+        args: ["plan"]
+        env:
+          - name: SCHEMAHERO_DRIVER
+            value: mysql
+          - name: SCHEMAHERO_SPEC_FILE
+            value: /go/src/github.com/replicatedhq/kurl-api/migrations/kustomize/schema
+          - name: SCHEMAHERO_OUT
+            value: /migrations/plan.yaml
+          - name: SCHEMAHERO_URI
+            value: replicated:password@tcp(kurl-mysql:3306)/replicated?tls=false
+      - image: kurl-migrations
+        name: migrations-apply
+        volumeMounts:
+          - name: migrations
+            mountPath: /migrations
+        args: ["apply"]
+        env:
+          - name: SCHEMAHERO_DRIVER
+            value: mysql
+          - name: SCHEMAHERO_DDL
+            value: /migrations/plan.yaml
+          - name: SCHEMAHERO_URI
+            value: replicated:password@tcp(kurl-mysql:3306)/replicated?tls=false

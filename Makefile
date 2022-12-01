@@ -58,3 +58,7 @@ build_and_push:
 	docker build -f deploy/Dockerfile -t ${PROJECT_NAME}:$${CIRCLE_SHA1:0:7} .
 	docker tag ${PROJECT_NAME}:$${CIRCLE_SHA1:0:7} $(REGISTRY)/${PROJECT_NAME}:$${CIRCLE_SHA1:0:7}
 	docker push $(REGISTRY)/${PROJECT_NAME}:$${CIRCLE_SHA1:0:7}
+
+.PHONY: fixtures
+fixtures:
+	docker build -t repldev/kurl-fixtures:local -f ./migrations/fixtures/Dockerfile ./migrations

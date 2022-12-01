@@ -5,6 +5,8 @@ bases:
 resources:
   - ./clusterip.yaml
   - ./okteto-cache-volume.yaml
+  - ./mysql.yaml
+  - ../../../migrations/kustomize/overlays/okteto
 
 patches:
   - ./deployment.yaml

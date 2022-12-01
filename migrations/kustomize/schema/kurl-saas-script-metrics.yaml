@@ -1,0 +1,38 @@
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: kurl-saas-script-metrics
+spec:
+  database: replicated
+  name: kurl_saas_script_metrics
+  schema:
+    mysql:
+      defaultCharset: latin1
+      primaryKey:
+      - id
+      columns:
+      - name: id
+        type:  char (36)
+        constraints:
+          notNull: true
+      - name: installer_id
+        type: varchar (255)
+        constraints:
+          notNull: true
+      - name: timestamp
+        type: datetime
+        constraints:
+          notNull: true
+      - name: is_airgap
+        type: tinyint (3, 0)
+        constraints:
+          notNull: true
+        default: "0"
+      - name: client_ip
+        type: varchar (39)
+        constraints:
+          notNull: false
+      - name: user_agent
+        type: varchar (255)
+        constraints:
+          notNull: false
