@@ -1291,7 +1291,7 @@ spec:
           "1.17.7",
           "1.17.3",
           "1.16.4",
-        ]);
+        ], "kubernetes");
 
       expect(out[0]).to.equal("0.0.0");
       expect(out[14]).to.equal("0.0.0");
@@ -1299,6 +1299,26 @@ spec:
       expect(out[16]).to.equal("1.16.4");
       expect(out[17]).to.equal("1.17.13");
       expect(out[18]).to.equal("1.18.20");
+    });
+
+    it("should replace rook version", () => {
+      const out = Installer.latestMinors([
+          '1.0.4',
+          '1.7.11',
+          '1.6.11',
+          '1.5.12',
+          '1.5.11',
+          '1.5.10',
+          '1.5.9',
+          '1.4.9',
+          '1.4.3',
+          '1.0.4-14.2.21'
+        ], "rook");
+
+      expect(out[0]).to.equal("1.0.4-14.2.21");
+      expect(out[1]).to.equal("0.0.0");
+      expect(out[3]).to.equal("0.0.0");
+      expect(out[4]).to.equal("1.4.9");
     });
   });
 

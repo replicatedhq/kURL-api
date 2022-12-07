@@ -1348,7 +1348,7 @@ export class Installer {
         if (config === "kubernetes") {
           kubernetesVersion = version;
           const prevMinor = semver.minor(version) - 1;
-          const step = Installer.latestMinors(installerVersions[config])[prevMinor];
+          const step = Installer.latestMinors(installerVersions[config], config)[prevMinor];
           if (step !== "0.0.0") {
             pkgs.push(`${config}-${step}`);
           }
@@ -1413,25 +1413,25 @@ export class Installer {
     return ret;
   }
 
-  public static latestMinors(versions: string[]): string[] {
-    const ret: string[] = _.fill(Array(16), "0.0.0");
+  public static latestMinors(versions: string[], addon: string): string[] {
+    if (!versions) {
+      return [];
+    }
+
+    let greatest = 0;
     versions.forEach((version: string) => {
       const minor = semver.minor(version);
-      const latest = ret[minor];
-
-      if (!latest  || semver.gt(version, latest)) {
-        ret[minor] = version;
+      if (minor > greatest) {
+        greatest = minor;
       }
     });
 
-    return ret;
-  }
-
-  public static greatest(versions: string[]): string {
-    let ret = "0.0.0";
+    const ret: string[] = _.fill(Array(greatest + 1), "0.0.0");
     versions.forEach((version: string) => {
-      if (!ret || semver.gt(version, ret)) {
-        ret = version;
+      const minor = semver.minor(version);
+      const latest = _.get(Installer.replaceVersions, [addon, ret[minor]], ret[minor]);
+      if (semver.gt(_.get(Installer.replaceVersions, [addon, version], version), latest)) {
+        ret[minor] = version;
       }
     });
 

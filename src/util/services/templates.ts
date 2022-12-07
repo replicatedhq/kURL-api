@@ -75,6 +75,7 @@ interface Manifest {
   KURL_UTIL_IMAGE: string;
   KURL_BIN_UTILS_FILE: string;
   STEP_VERSIONS: string;
+  ROOK_STEP_VERSIONS: string;
   INSTALLER_YAML: string;
 }
 
@@ -99,7 +100,8 @@ export function manifestFromInstaller(i: Installer, kurlUrl: string, replicatedA
     REPLICATED_APP_URL: replicatedAppURL,
     KURL_UTIL_IMAGE: kurlUtilImage,
     KURL_BIN_UTILS_FILE: kurlBinUtils,
-    STEP_VERSIONS: `(${Installer.latestMinors(installerVersions["kubernetes"]).join(" ")})`,
+    STEP_VERSIONS: `(${Installer.latestMinors(installerVersions["kubernetes"], "kubernetes").join(" ")})`,
+    ROOK_STEP_VERSIONS: `(${Installer.latestMinors(installerVersions["rook"], "rook").join(" ")})`,
     INSTALLER_YAML: bashStringEscape(i.toYAML()),
   };
 }
