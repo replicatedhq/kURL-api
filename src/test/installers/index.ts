@@ -51,12 +51,3 @@ describe("Resolve version", () => {
   });
 
 });
-
-describe("greatest", () => {
-
-  it("resolves greatest openebs", () => {
-    const version = Installer.greatest(["1.12.0", "1.6.0", "3.2.0", "2.12.9", "2.6.0"]);
-    expect(version).to.equal("3.2.0");
-  });
-
-});
