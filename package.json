@@ -35,7 +35,7 @@
     "statsd-client": "^0.4.7",
     "superagent": "^8.0.6",
     "uuid": "^9.0.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.6.2"
   },
   "devDependencies": {
     "@types/chai": "^4.3.3",
@@ -51,7 +51,7 @@
     "@types/semver": "^7.3.12",
     "@types/sinon": "^10.0.13",
     "@types/source-map-support": "^0.5.6",
-    "@types/yargs": "^17.0.13",
+    "@types/yargs": "^17.0.17",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "chai": "^4.3.6",
