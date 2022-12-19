@@ -7,7 +7,7 @@ require (
 	github.com/containers/image/v5 v5.23.1
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurlkinds v1.0.7
+	github.com/replicatedhq/kurlkinds v1.0.8
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.4.0
 )
@@ -48,7 +48,7 @@ require (
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/klauspost/compress v1.15.13 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/letsencrypt/boulder v0.0.0-20220723181115-27de4befb95e // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/moby/sys/mountinfo v0.6.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/open-policy-agent/opa v0.46.1 // indirect
+	github.com/open-policy-agent/opa v0.47.3 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
@@ -68,8 +68,8 @@ require (
 	github.com/ostreedev/ostree-go v0.0.0-20210805093236-719684c64e4f // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/proglottis/gpgme v0.1.3 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
-	github.com/replicatedhq/troubleshoot v0.45.0 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/replicatedhq/troubleshoot v0.49.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sigstore/sigstore v1.4.2 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -88,23 +88,23 @@ require (
 	github.com/yashtewari/glob-intersection v0.1.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352 // indirect
-	go.opencensus.io v0.23.0 // indirect
+	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	google.golang.org/genproto v0.0.0-20220720214146-176da50484ac // indirect
-	google.golang.org/grpc v1.50.1 // indirect
+	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e // indirect
+	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.25.3 // indirect
-	k8s.io/apimachinery v0.25.3 // indirect
+	k8s.io/api v0.26.0 // indirect
+	k8s.io/apimachinery v0.26.0 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
+	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	sigs.k8s.io/controller-runtime v0.13.1 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
