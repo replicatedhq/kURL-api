@@ -811,7 +811,7 @@ export class Installer {
     const i = new Installer();
 
     i.id = "latest";
-    i.spec.kubernetes = { version: "1.25.x" };
+    i.spec.kubernetes = { version: "1.26.x" };
     i.spec.containerd = { version: this.toDotXVersion(installerVersions.containerd[0]) };
     i.spec.weave = { version: this.toDotXVersion(installerVersions.weave[0]) };
     i.spec.ekco = { version: "latest" };
@@ -1279,6 +1279,13 @@ export class Installer {
     if (this.spec.rook && this.spec.rook.version && this.spec.rook.version != "latest" && semver.lte(this.spec.rook.version, "1.9.10")) {
       if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.25.0")) {
         return {error: {message: "Rook versions less than or equal to 1.9.10 are not compatible with Kubernetes 1.25+"}};
+      }
+    }
+
+    // Containerd < v1.6.0 is incompatible with Kubernetes 1.26+
+    if (this.spec.containerd && this.spec.containerd.version && this.spec.containerd.version != "latest" && semver.lt(this.spec.containerd.version, "1.6.0")) {
+      if (this.spec.kubernetes && this.spec.kubernetes.version && semver.gte(this.spec.kubernetes.version, "1.26.0")) {
+        return {error: {message: "Containerd versions less than 1.6.0 are not compatible with Kubernetes 1.26+"}};
       }
     }
 
