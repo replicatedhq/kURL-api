@@ -46,7 +46,7 @@
     "@types/lodash": "^4.14.191",
     "@types/mocha": "^10.0.1",
     "@types/node-fetch": "^2.6.2",
-    "@types/object-hash": "^3.0.1",
+    "@types/object-hash": "^3.0.2",
     "@types/pino": "^7.0.5",
     "@types/semver": "^7.3.13",
     "@types/sinon": "^10.0.13",
