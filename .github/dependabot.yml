@@ -18,7 +18,7 @@ updates:
       - "type::chore"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5  
+    open-pull-requests-limit: 25
 
   - package-ecosystem: "github-actions"
     directory: "/"
