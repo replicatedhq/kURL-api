@@ -13,7 +13,7 @@
     "@tsed/logger": "^6.3.3",
     "@tsed/platform-express": "^6.133.0",
     "@types/uuid": "^9.0.0",
-    "ajv": "^8.11.2",
+    "ajv": "^8.12.0",
     "aws-sdk": "^2.1286.0",
     "base64url": "^3.0.1",
     "cors": "^2.8.5",
